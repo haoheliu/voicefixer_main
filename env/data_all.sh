@@ -1,0 +1,1 @@
+source dcase.sh & source hq_tts.sh & source musdb_noise.sh & source noise_44k.sh & source rir_init.sh & source test_set_speech_all_distortion.sh & source timit.sh & source vctk_demand.sh & source vctk_init.sh & source vd_test.sh & source vocal_44k_init.sh
