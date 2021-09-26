@@ -189,8 +189,8 @@ def convert_flac_to_wav(dir):
     for i,path in enumerate(files):
         if (current == "flac"):
             cmd = "sox " + path + " " + path[:-5] + ".wav"
-        os.system(cmd)
-        os.remove(path)
+            os.system(cmd)
+            os.remove(path)
         pbar.update(int((i / (len(files) - 1)) * 100))
     pbar.finish()
 
@@ -211,8 +211,8 @@ def convert_wav_to_flac(dir):
     for i,path in enumerate(files):
         if (current == "wav"):
             cmd = "sox " + path + " " + path[:-4] + ".flac"
-        os.system(cmd)
-        os.remove(path)
+            os.system(cmd)
+            os.remove(path)
         pbar.update(int((i / (len(files) - 1)) * 100))
     pbar.finish()
 

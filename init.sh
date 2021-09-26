@@ -30,11 +30,10 @@ if [ ! -d "datasets/se/Testsets" ]; then
 fi
 python3 datasets/datasetParser/test_set_speech_all_distortion.py
 
-
 if [ ! -d "datasets/se/RIR_44k" ]; then
   echo "Preparing 44.1k Room Impulse Response dataset"
   if [ ! -f "datasets/se/RIR_44k.zip" ]; then
-    wget https://zenodo.org/record/5528132/files/RIR_44k.zip?download=1 -O datasets/se/RIR_44k.zip
+    wget https://zenodo.org/record/5528124/files/RIR_44k.zip?download=1 -O datasets/se/RIR_44k.zip
   fi
   unzip -xzvf datasets/se/RIR_44k.zip
 fi

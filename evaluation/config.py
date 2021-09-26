@@ -35,16 +35,16 @@ class Config:
 
     makedirs(EVAL_RESULT,exist_ok=True)
 
-    SE_ROOT = join(TEST_ROOT,"Speech_Enhancement")  # Speech Enhancement
-    SD_ROOT = join(TEST_ROOT,"Speech_Declipping")   # Speech Declipping
-    SSR_ROOT = join(TEST_ROOT,"Speech_Super_Resolution") # Speech Super Resolution
-    SDR_ROOT = join(TEST_ROOT,"Speech_Dereverberation") # Speech Dereverb
-    ALL_ROOT = join(TEST_ROOT,"All")
+    SE_ROOT = join(TEST_ROOT,"DENOISE")  # Speech Enhancement
+    SD_ROOT = join(TEST_ROOT,"DECLI")   # Speech Declipping
+    SSR_ROOT = join(TEST_ROOT,"SR") # Speech Super Resolution
+    SDR_ROOT = join(TEST_ROOT,"DEREV") # Speech Dereverb
+    ALL_ROOT = join(TEST_ROOT,"ALL_GSR")
 
     ALL_DATA = {
         "all_random_filter_type": {
             "rate": 44100,
-            "list": join(ALL_ROOT, "random_filter_type", "pair_random_filter_type.lst"),
+            "list": join(ALL_ROOT, "pair_random_filter_type.lst"),
             "unify_energy": False,
         },
     }
