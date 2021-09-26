@@ -70,7 +70,7 @@ class Config:
     aug_effects = ["low_pass", "clip", "reverb_rir"]
 
     aug_conf = {
-        "rir_root": os.path.join(ROOT, "voicefixer_main/datasets/se/RIR_44k/train"),
+        "rir_root": os.path.join(ROOT, "voicefixer_main/datasets/se/size_1_12_rt60_0.05_1.0_sr_44100/train"),
         # clean
         'tempo': {
             'prob': [0.0, 0.0],
