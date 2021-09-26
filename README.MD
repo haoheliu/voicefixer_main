@@ -9,7 +9,7 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 Will be available before Oct.03 2021!
 
 # Train from scratch
-Still working on it, stay tuned!
+Still working on it, stay tuned! Expect to be available before 2021.09.30.
 
 # Demo
 You can listen to some [demo](https://haoheliu.github.io/demopage-voicefixer/) here.
