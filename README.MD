@@ -3,7 +3,7 @@
 ![real-life-example](resources/pics/GSR.png)
 
 # VoiceFixer
-VoiceFixer is a framework for general speech restoration. We aim at the restoration of severly degraded and historical speech.
+VoiceFixer is a framework for general speech restoration. We aim at the restoration of severly degraded speech and historical speech.
 
 # Paper
 Will be available before Oct.03 2021!
