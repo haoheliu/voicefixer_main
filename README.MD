@@ -1,15 +1,15 @@
 # [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing)
 
-[![46dPxJ.png](https://z3.ax1x.com/2021/09/26/46dPxJ.png)](https://imgtu.com/i/46dPxJ)
-
 # VoiceFixer
 VoiceFixer is a framework for general speech restoration. We aim at the restoration of severly degraded speech and historical speech.
 
+[![46dPxJ.png](https://z3.ax1x.com/2021/09/26/46dPxJ.png)](https://imgtu.com/i/46dPxJ)
+
 # Paper
-Will be available before Oct.03 2021!
+⚠️ Will be available before Oct.03 2021!
 
 # Train from scratch
-Still working on it, stay tuned! Expect to be available before 2021.09.30.
+⚠️ Still working on it, stay tuned! Expect to be available before 2021.09.30.
 
 # Demo
 ## Demo page 
@@ -28,7 +28,7 @@ You can try voicefixer using your own voice on [colab](https://colab.research.go
 ![real-life-example](resources/pics/SR-2k.png)
 
 # Citation
-Will be available once the paper is ready.
+⚠️  Will be available once the paper is ready.
 
 
 
