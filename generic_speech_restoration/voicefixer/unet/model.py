@@ -141,7 +141,7 @@ class Generator(nn.Module):
         # unet_out = self.unet(to_log(mel_orig))['mel']
         unet_out = self.unet(to_log(mel_orig))
         # masks
-        mel = unet_out + to_log(mel_orig)
+        mel = unet_out['mel'] + to_log(mel_orig)
         # todo mel and addition here are in log scales
         return {'mel': mel, "lstm_out":unet_out, "unet_out":unet_out}
 
@@ -374,7 +374,7 @@ class ResUNet(pl.LightningModule):
 
             self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
 
-            targ_loss = self.l1loss(self.generated['mel'], self.mel_target)
+            targ_loss = self.l1loss(self.generated['mel'], to_log(self.mel_target))
 
             self.log("targ-l", targ_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
 

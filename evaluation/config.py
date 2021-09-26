@@ -30,6 +30,9 @@ class Config:
     # TEST_ROOT = "/Volumes/Haohe_SSD/TestSets_bak"
     TEST_ROOT = os.path.join(r, "voicefixer_main/datasets/se/TestSets")
     EVAL_RESULT = os.path.join(r, "voicefixer_main/exp_results")
+    HDFS_RESULT_ROOT = "hdfs://haruna/home/byte_speech_sv/user/liuhaohe/exps2/iclr_exps"
+    HDFS_ROOT = "hdfs://haruna/home/byte_speech_sv/user/liuhaohe/exps2"
+
     makedirs(EVAL_RESULT,exist_ok=True)
 
     SE_ROOT = join(TEST_ROOT,"Speech_Enhancement")  # Speech Enhancement

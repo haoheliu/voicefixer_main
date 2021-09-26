@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("/Users/admin/Documents/projects/arnold_workspace/src")
 sys.path.append("/opt/tiger/lhh_arnold_base/arnold_workspace/src")
+
 import concurrent.futures
 from multiprocessing import set_start_method
 from evaluation import Config
@@ -13,7 +14,10 @@ from math import ceil
 import logging
 import random
 from tools.file.hdfs import *
+from tools.file.io import *
 from pynvml import nvmlInit
+import glob
+from evaluation.util import *
 
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
@@ -190,30 +194,30 @@ def evaluation(
 
     gather_score(output_path, limit_testset_to)
 
-    print("Do you want to back up this result to hdfs? ")
-    while (True):
-        in_content = input("Type in yes/no/part: ")
-        if (in_content == "yes"):
-            remote_path = os.path.join(Config.HDFS_RESULT_ROOT, id)
-            convert_wav_to_flac(output_path)
-            hdfs_mkdir(remote_path)
-
-            for file in glob.glob(os.path.join(output_path, "*.csv")) + \
-                        glob.glob(os.path.join(output_path, "*/*.csv")) + \
-                        glob.glob(os.path.join(output_path, "*/*/*.csv")):
-                print(file)
-                hdfs_put(file, hdfs_path=remote_path)
-
-            os.system("tar -zcf " + output_path + ".tar " + output_path)
-            print("Putting", output_path + ".tar", "to", remote_path)
-            hdfs_put(output_path + ".tar", hdfs_path=remote_path)
-
-            print("Done")
-            break
-        elif (in_content == "no"):
-            break
-        else:
-            continue
+    # print("Do you want to back up this result to hdfs? ")
+    # while (True):
+    #     in_content = input("Type in yes/no/part: ")
+    #     if (in_content == "yes"):
+    #         remote_path = os.path.join(Config.HDFS_RESULT_ROOT, id)
+    #         convert_wav_to_flac(output_path)
+    #         hdfs_mkdir(remote_path)
+    #
+    #         for file in glob.glob(os.path.join(output_path, "*.csv")) + \
+    #                     glob.glob(os.path.join(output_path, "*/*.csv")) + \
+    #                     glob.glob(os.path.join(output_path, "*/*/*.csv")):
+    #             print(file)
+    #             hdfs_put(file, hdfs_path=remote_path)
+    #
+    #         os.system("tar -zcf " + output_path + ".tar " + output_path)
+    #         print("Putting", output_path + ".tar", "to", remote_path)
+    #         hdfs_put(output_path + ".tar", hdfs_path=remote_path)
+    #
+    #         print("Done")
+    #         break
+    #     elif (in_content == "no"):
+    #         break
+    #     else:
+    #         continue
     return output_path
 
 

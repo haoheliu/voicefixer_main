@@ -1,7 +1,9 @@
+import git
 import sys
+import os
 
-sys.path.append("/Users/admin/Documents/projects/arnold_workspace/src")
-sys.path.append("/opt/tiger/lhh_arnold_base/arnold_workspace/src")
+git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
+sys.path.append(git_root)
 
 from tools.file.wav import *
 from generic_speech_restoration.voicefixer.unet.model import ResUNet as Model
@@ -85,16 +87,6 @@ def handler_copy(input, output, target, device) -> dict:
     os.system("cp "+input+" "+output)
     return {}
 
-# class cnn(nn.Module):
-#     def __init__(self):
-#         super(cnn, self).__init__()
-#         self.model = nn.Conv2d(1,1,kernel_size=1)
-#         self.f_helper = FDomainHelper()
-#         self.mel = MelScale(n_mels=128, sample_rate=44100, n_stft=1025)
-#         self.vocoder = Vocoder(sample_rate=44100)
-#     def forward(self, y, x):
-#         return {'mel': self.model(to_log(x))}
-
 def pre(input, device):
     input = input[None, None, ...]
     input = torch.tensor(input).to(device)
@@ -145,11 +137,6 @@ def handler(input, output, target,ckpt, device, needrefresh=False,meta={}):
                     "mel-ssim": float(am.ssim(denoised_mel,target_mel)),
                 }
 
-            # draw_and_save(out_model['clean'], needlog=True)
-            # draw_and_save(out_model['addition'], needlog=False)
-            # draw_and_save(mel_noisy,needlog=True)
-            # draw_and_save(denoised_mel,needlog=True)
-
             out = model.vocoder(denoised_mel)
             # unify energy
             if(torch.max(torch.abs(out)) > 1.0):
@@ -197,56 +184,12 @@ if __name__ == '__main__':
     if(description[0] == "."): description = description[1:]
     testset = args.testset
 
-    if(args.git):
-        description = "git_" + description
-        output_dir = evaluation(output_path=Config.EVAL_RESULT,
-             handler=handler,
-             ckpt=ckpt_path,
-             description=key+"_"+args.description.strip()+"_"+description,
-             # limit_testset_to=['vctk_demand'],
-             limit_testset_to=Config.get_testsets(testset),
-             limit_phrase_number=int(args.limit_numbers) if(args.limit_numbers is not None) else 3)
-        os.system("cp -r "+output_dir+" "+Config.GIT_ROOT)
-        os.system("git -C "+Config.GIT_ROOT+" add "+ os.path.basename(output_dir))
-        os.system("git -C "+Config.GIT_ROOT+" commit -m"+os.path.basename(output_dir))
-        os.system("git -C "+Config.GIT_ROOT+" push origin master")
-    else:
-        main(output_path=Config.EVAL_RESULT,
-             handler=handler,
-             ckpt=ckpt_path,
-             description=key+"_"+args.description.strip()+"_"+description,
-             # limit_testset_to=['vctk_demand'],
-             limit_testset_to=Config.get_testsets(testset),
-             # limit_testset_to=Config.get_testsets("real"),
-             # limit_testset_to=Config.get_testsets("compression"),
-             # limit_testset_to=Config.get_testsets("declipping"),
-             # limit_testset_to=Config.get_testsets("enhancement_vctk"),
-             # limit_testset_to=Config.get_testsets("enhancement_dns"),
-             # limit_testset_to=Config.get_testsets("all_types"),
-             # limit_testset_to=Config.get_testsets("reverb"),
-             # limit_testset_to=Config.get_testsets("butter"),
-             # limit_testset_to=Config.get_testsets("bessel"),
-             # limit_testset_to=Config.get_testsets("ellip"),
-             # limit_testset_to=Config.get_testsets("daps"),
-             limit_phrase_number=int(args.limit_numbers) if(args.limit_numbers is not None) else None)
-
-
-    os.system("python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy_all.py &")
-    # TESTSETS={
-    #     "compression": ['vctk_kbps_16'],
-    #     "declipping": ['vctk_0.2','vctk_0.4','vctk_0.6','vctk_0.8'],
-    #     "enhancement_vctk": ['-10db','-5db','0db','vctk_demand'],
-    #     "enhancement_dns": ['dns_no_reverb','dns_with_reverb'],
-    #     "real":["dns_real_recording","Real_Recording"],
-    #     "all_types":["all_random_filter_type"],
-    #     "reverb":["vctk_reverb"],
-    #     "butter": ['vctk_butter_1000', 'vctk_butter_2000', 'vctk_butter_4000', 'vctk_butter_8000', 'vctk_butter_12000'],
-    #     "bessel": ['vctk_bessel_1000', 'vctk_bessel_2000', 'vctk_bessel_4000', 'vctk_bessel_8000', 'vctk_bessel_12000'],
-    #     "ellip": ['vctk_ellip_1000', 'vctk_ellip_2000', 'vctk_ellip_4000', 'vctk_ellip_8000', 'vctk_ellip_12000'],
-    #     "cheby1": ['vctk_cheby1_1000', 'vctk_cheby1_2000', 'vctk_cheby1_4000', 'vctk_cheby1_8000', 'vctk_cheby1_12000'],
-    #     "daps": ['daps_cheby1_11025']
-    # }
-
+    evaluation(output_path=Config.EVAL_RESULT,
+         handler=handler,
+         ckpt=ckpt_path,
+         description=key+"_"+args.description.strip()+"_"+description,
+         limit_testset_to=Config.get_testsets(testset),
+         limit_phrase_number=int(args.limit_numbers) if(args.limit_numbers is not None) else None)
 
 
 

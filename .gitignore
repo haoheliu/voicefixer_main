@@ -1,0 +1,40 @@
+#some folders
+Exp_Results
+ig_*
+__pycache__
+checkpoints
+.idea
+#modules
+*_log
+trash
+_reload*
+events*
+
+
+# datasets
+musdb18hq
+musdb18
+
+# Softwares
+WavAugment
+
+# some files
+.DS_Store
+*.zip
+*.pt
+*.npy
+*.mat
+*.ckpt
+*.wav
+*.pkf
+*.lst
+*.pkl
+*.json
+*.mp3
+*.png
+*.jpg
+*.hdf5
+*.pyc
+*.txt
+license*
+

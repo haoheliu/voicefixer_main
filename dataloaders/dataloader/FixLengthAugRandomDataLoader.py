@@ -104,7 +104,6 @@ class FixLengthAugRandomDataLoader(Dataset):
                 data[k+"_aug"] = self.aug.perform(frames=data[k],effects=self.aug_effects)
                 data[k+"_aug"] = torch.tensor(data[k+"_aug"].astype(np.float32))
                 data[k+"_aug"] = constrain_length_torch(data[k+"_aug"][...,None], int(self.sample_rate * self.frame_length))
-
         return data
 
     def __len__(self):
@@ -129,19 +128,3 @@ def aug_test():
 
 if __name__ == "__main__":
     aug_test()
-
-    # dl = FixLengthRandomDataLoader(data={
-    #     "vocals": {
-    #         "musdb18hq": "/Users/admin/Documents/projects/arnold_workspace/dataIndex/musdb18hq/train/vocals.lst"
-    #     },
-    #
-    #     # "acc": {
-    #     #     "musdb18hq": "/Users/admin/Documents/projects/arnold_workspace/dataIndex/musdb18hq/train/acc.lst"
-    #     # },
-    # } ,  overlap_num=1, frame_length=3.0,sample_rate=44100,aug_effects = [], aug_sources = [], aug_conf = None,)
-    #
-    # dl = torch.utils.data.DataLoader(dataset=dl,batch_size=4,shuffle=False,num_workers=2)
-    #
-    # for id,each in enumerate(dl):
-    #     print(id)
-    #     print(type(each))

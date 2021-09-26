@@ -17,9 +17,7 @@ from generic_speech_restoration.voicefixer.get_model import *
 from generic_speech_restoration.voicefixer.dm_sr_rand_sr_order import SrRandSampleRate
 from dataloaders.main import DATA
 from callbacks.base import *
-from callbacks.earlyStop import *
 from callbacks.verbose import *
-
 from tools.file.hdfs import *
 
 import time
@@ -27,8 +25,8 @@ from argparse import ArgumentParser
 from generic_speech_restoration.config import Config
 from tools.dsp.lowpass import *
 
-Config.aug_sources = ["vocals"] # todo
-Config.aug_effects = ["low_pass", "clip", "reverb_rir"]
+# Config.aug_sources = ["vocals"] # todo
+# Config.aug_effects = ["low_pass", "clip", "reverb_rir"]
 
 def report_dataset(names):
     res = "#"
@@ -51,7 +49,8 @@ if __name__ == "__main__":
     parser.add_argument("-san", '--sanity_val_steps', type=int, default=2)
     parser.add_argument("--dl", type=str, default="FixLengthAugRandomDataLoader") # "FixLengthFixSegRandomDataLoader", "FixLengthThreshRandDataLoader"
     parser.add_argument("--overlap_num", type=int, default=1)
-
+    parser.add_argument("--aug_sources", nargs="+", default=["vocals"], help="validation datasets.")
+    parser.add_argument("--aug_effects", nargs="+", default=[], help="validation datasets.")
     # experiment
     parser.add_argument("--source_sample_rate_low", type=int, default=8000)
     parser.add_argument("--source_sample_rate_high", type=int, default=24000)
@@ -72,10 +71,6 @@ if __name__ == "__main__":
 
     ROOT = Config.ROOT
 
-    # if ("tiger" in ROOT): ARNOLD = True
-    # else: ARNOLD = False
-    # assert len(Config.TRAIL_NAME) != 0
-
     if (os.path.exists("temp_path.json")):
         os.remove("temp_path.json")
     if (os.path.exists("path.json")):
@@ -83,6 +78,10 @@ if __name__ == "__main__":
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+
+    Config.aug_sources = args.aug_sources
+    Config.aug_effects = args.aug_effects
+
     current = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     name = current + "-" + args.model+"-"+report_dataset(args.train_data_type)+"-"+\
            report_dataset(args.train_dataset)+"-" + \
@@ -90,7 +89,7 @@ if __name__ == "__main__":
            args.name + "-" + args.loss + "#"+str(args.source_sample_rate_low)+"_"+ str(args.source_sample_rate_high) + "#"
 
     if (len(args.reload) != 0):
-        name += "_reload_" + (args.reload).replace("/", ".")
+        name += "_reload"
 
     if (torch.cuda.is_available()):
         nvmlInit()
@@ -121,6 +120,7 @@ if __name__ == "__main__":
                              check_val_every_n_epoch = args.check_val_epoch,
                              warm_up_steps=int(args.warmup_data * 3600 / seconds_per_step),
                              reduce_lr_steps=int(args.reduce_lr_period * 3600 / seconds_per_step))
+
     print(Config.aug_conf)
     print(Config.aug_sources)
     print(Config.aug_effects)
@@ -133,8 +133,8 @@ if __name__ == "__main__":
         train_data=DATA.merge([DATA.get_trainset(set) for set in args.train_dataset]),
         val_data=DATA.merge([DATA.get_testset(set) for set in args.val_dataset]) if(len(args.val_dataset) != 0) else {},
         train_data_type=args.train_data_type, val_datasets=args.val_dataset,
-        batchsize=args.batchsize, frame_length=args.frame_length, num_workers=0, sample_rate=args.sample_rate,
-        aug_conf=Config.aug_conf, aug_sources=Config.aug_sources, aug_effects=Config.aug_effects,
+        batchsize=args.batchsize, frame_length=args.frame_length, num_workers=22 if (torch.cuda.is_available()) else 0,
+        sample_rate=args.sample_rate, aug_conf=Config.aug_conf, aug_sources=Config.aug_sources, aug_effects=Config.aug_effects,
         hours_for_an_epoch=500
     )
 
@@ -163,10 +163,10 @@ if __name__ == "__main__":
     for each in callbacks: print(each)
 
     trainer = Trainer.from_argparse_args(args,
-                                         gpus=0,
-                                         # plugins=DDPPlugin(find_unused_parameters=True),
+                                         gpus=gpu_nums,
+                                         plugins=DDPPlugin(find_unused_parameters=True) if (torch.cuda.is_available()) else None,
                                          max_epochs=args.max_epoches,
-                                         # terminate_on_nan=True,
+                                         terminate_on_nan=True,
                                          num_sanity_val_steps=args.sanity_val_steps,
                                          resume_from_checkpoint=args.reload if (len(args.reload) != 0) else None,
                                          callbacks=callbacks,
