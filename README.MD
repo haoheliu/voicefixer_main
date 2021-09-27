@@ -1,7 +1,6 @@
 # [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing)
 
 # VoiceFixer
-⚠️ Still working on this repo, stay tuned!
 
 VoiceFixer is a framework for general speech restoration. We aim at the restoration of severly degraded speech and historical speech.
 
@@ -15,7 +14,7 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 
 ## Environment
 ```shell script
-# prepare dataset and running environment
+# Download dataset and prepare running environment
 source init.sh 
 ```
 ## Train from scratch
@@ -28,7 +27,7 @@ cd general_speech_restoration/voicefixer/unet
 source run.sh
 ```
 
-After that, you will get a log directory inside folder that look like this
+After that, you will get a log directory that look like this
 ```python3
 ├── unet
 │   └── log
@@ -40,7 +39,8 @@ After that, you will get a log directory inside folder that look like this
 ``` 
 
 ## Evaluation
-Automatic evaluation on 11 evaluation sets and generate .csv file for the results.
+Automatic evaluation and generate .csv file for the results.
+
 ```shell script
 cd general_speech_restoration/voicefixer/unet
 # Basic usage
@@ -49,7 +49,7 @@ python3 handler.py  -c <str, path-to-checkpoint> \
                     -l <int, limit-utterance-number> \ 
                     -d <str, description of this evaluation> \ 
 ```
-For example, if you like to evaluate on all testset. And each testset you just want to test 10 utterance.
+For example, if you like to evaluate on all testset. And each testset you intend to limit the number to 10 utterance.
 ```shell script
 python3 handler.py  -c  log/2021-09-27-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  base \ 

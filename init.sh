@@ -1,3 +1,8 @@
+pip3 install --upgrade virtualenv==16.7.9 # this version virtualenv support the --no-site-packages option
+virtualenv --no-site-packages voicefixer # create new environment
+source voicefixer/bin/activate # activate environment
+pip3 install -r requirements.txt # install requirements
+
 if ! [ -x "$(command -v unzip)" ]; then
   echo 'Error: unzip is not installed.' >&2
   exit 1
