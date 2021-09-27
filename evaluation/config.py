@@ -22,7 +22,12 @@ class Config:
         "base": ['vctk_reverb', 'vctk_0.1', 'vctk_0.25', 'vctk_0.5',
                  'all_random_filter_type','vctk_demand',
                  'vctk_cheby1_1000', 'vctk_cheby1_2000',
-                 'vctk_cheby1_4000', 'vctk_cheby1_8000', 'vctk_cheby1_12000', ],
+                 'vctk_cheby1_4000', 'vctk_cheby1_8000', 'vctk_cheby1_12000'],
+        "clip": ['vctk_0.1', 'vctk_0.25', 'vctk_0.5'],
+        "reverb": ['vctk_reverb'],
+        "general_speech_restoration": ['all_random_filter_type'],
+        "enhancement": ['vctk_demand'],
+        "speech_super_resolution": ['vctk_cheby1_1000', 'vctk_cheby1_2000', 'vctk_cheby1_4000', 'vctk_cheby1_8000', 'vctk_cheby1_12000']
     }
 
     r = os.path.dirname(git_root)
@@ -132,8 +137,8 @@ class Config:
         import re
 
         # ALL Types GSR
-        Ground_Truth_Path = join(cls.ALL_ROOT,"random_filter_type","target")  # todo attension here is no reverb ( instead of with reverb )
-        source_dir = join(cls.ALL_ROOT,"random_filter_type","simulated")
+        Ground_Truth_Path = join(cls.ALL_ROOT,"target")  # todo attension here is no reverb ( instead of with reverb )
+        source_dir = join(cls.ALL_ROOT,"simulated")
         ALL = []
         simulated = []
         clean = []
@@ -143,9 +148,9 @@ class Config:
             ALL.append(join(source_dir,file)+" "+join(Ground_Truth_Path,gt_name+"clean.wav"))
             simulated.append(join(source_dir,file))
             clean.append(join(Ground_Truth_Path,gt_name+"clean.wav"))
-        write_list(ALL,join(cls.ALL_ROOT, "random_filter_type", "pair_random_filter_type.lst"))
-        write_list(simulated, join(cls.ALL_ROOT, "random_filter_type", "simulated.lst"))
-        write_list(clean, join(cls.ALL_ROOT, "random_filter_type", "target.lst"))
+        write_list(ALL,join(cls.ALL_ROOT, "pair_random_filter_type.lst"))
+        write_list(simulated, join(cls.ALL_ROOT, "simulated.lst"))
+        write_list(clean, join(cls.ALL_ROOT, "target.lst"))
 
         # Speech Declipping
         Ground_Truth_Path = join(cls.SD_ROOT,"GroundTruth")

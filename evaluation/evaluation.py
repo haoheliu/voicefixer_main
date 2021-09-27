@@ -10,7 +10,7 @@ from progressbar import *
 import time
 from evaluation import AudioMetrics
 from math import ceil
-# from generic_speech_restoration.all_stft_hard_only.model_kqq_lstm_mask_gan.handler import refresh_model
+# from general_speech_restoration.all_stft_hard_only.model_kqq_lstm_mask_gan.handler import refresh_model
 import logging
 import random
 from tools.file.hdfs import *

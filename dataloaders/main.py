@@ -88,10 +88,10 @@ class DATA:
 
     ALL_GSR = {
         "vocals": {
-            "gsr": "voicefixer_main/datasets/se/TestSets/All/random_filter_type/target.lst",
+            "gsr": "voicefixer_main/datasets/se/TestSets/ALL_GSR/target.lst",
         },
         "noisy": {
-            "gsr": "voicefixer_main/datasets/se/TestSets/All/random_filter_type/simulated.lst",
+            "gsr": "voicefixer_main/datasets/se/TestSets/ALL_GSR/simulated.lst",
         }
     }
 

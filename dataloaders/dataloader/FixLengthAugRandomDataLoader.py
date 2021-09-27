@@ -111,7 +111,7 @@ class FixLengthAugRandomDataLoader(Dataset):
         return int(3600*self.hours_for_an_epoch / self.frame_length)
 
 def aug_test():
-    from generic_speech_restoration.config import Config
+    from general_speech_restoration.config import Config
     from dataloaders.main import DATA
     from tools.file.wav import save_wave
     dl = FixLengthAugRandomDataLoader(data=DATA.get_trainset("vctk") , type_of_sources=["vocals"], overlap_num=1, frame_length=3.0,sample_rate=44100,
