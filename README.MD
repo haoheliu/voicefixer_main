@@ -9,6 +9,9 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 # Paper
 ⚠️ We submit this paper to ICLR2022. Preprint on *arxiv* will be available before Oct.03 2021!
 
+# New
+Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See [Gradio Web Demo](https://huggingface.co/spaces/akhaliq/VoiceFixer)
+
 # Usage
 ⚠️ Still working on it, stay tuned! Expect to be available before 2021.09.30.
 
