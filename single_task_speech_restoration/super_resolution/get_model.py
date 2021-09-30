@@ -1,4 +1,4 @@
-from general_speech_restoration.unet.model.model import ResUNet as unet
+from single_task_speech_restoration.super_resolution.unet.model import ResUNet as unet
 
 def get_model(name:str):
     if(name == "unet"):

@@ -36,5 +36,4 @@ WavAugment
 *.hdf5
 *.pyc
 *.txt
-license*
 

@@ -408,7 +408,7 @@ class DNN(pl.LightningModule):
 
             loss = targ_loss
 
-            if(self.train_step >= 280000):
+            if(self.train_step < 0): # disable discriminative training
                 g_loss = self.bce_loss(self.discriminator(self.generated['mel']), self.valid)
                 self.log("g_l", g_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
                 # print("g_loss", g_loss)
@@ -420,7 +420,7 @@ class DNN(pl.LightningModule):
             return {"loss": all_loss}
 
         elif(optimizer_idx == 1):
-            if(self.train_step >= 250000):
+            if(self.train_step < 0):
                 self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
                 self.train_step += 0.5
                 real_loss = self.bce_loss(self.discriminator(to_log(self.mel_target)),self.valid)

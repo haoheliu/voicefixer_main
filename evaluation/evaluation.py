@@ -10,7 +10,7 @@ from progressbar import *
 import time
 from evaluation import AudioMetrics
 from math import ceil
-# from general_speech_restoration.all_stft_hard_only.model_kqq_lstm_mask_gan.handler import refresh_model
+# from general_speech_restoration.all_stft_hard_only.unet.handler import refresh_model
 import logging
 import random
 from tools.file.hdfs import *
@@ -75,7 +75,7 @@ def aggregate_score(
                     logging.exception(e)
 
                 result[testset][os.path.basename(target)] = score_part_2
-            pbar.update(int((i / (len(lst) - 1)) * 100))
+            pbar.update(int((i / (len(lst) + 1)) * 100))
         pbar.finish()
         if (has_target):
             df = pd.DataFrame.from_dict(result[testset]).transpose()
@@ -131,7 +131,7 @@ def inference(handler: callable,
                 score_part_1 = handler(input=source, output=wav_file_dir, target=target, device=device, ckpt=ckpt,
                                        needrefresh=False, meta=meta)
             write_json(score_part_1, wav_file_dir[:-4] + ".json")
-            pbar.update(int((j / (len(lst) - 1)) * 100))
+            pbar.update(int((j / (len(lst)+1)) * 100))
         pbar.finish()
 
 def split_list_average_n(origin_list, n):
@@ -169,8 +169,8 @@ def evaluation(
               torch.device("cuda:0") if (torch.cuda.is_available()) else torch.device("cpu"),
               limit_phrase_number)
 
-    os.system("python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy_all.py &")
-    os.system("python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy_all.py &")
+    # os.system("python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy_all.py &")
+    # os.system("python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy_all.py &")
 
     # Evaluation
     MAX_PROC = 12

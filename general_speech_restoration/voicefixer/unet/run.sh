@@ -1,5 +1,7 @@
 pwd
 
+export TRAIL_NAME="pc"
+
 python3 train.py -m  unet \
                   -l l1 \
                  -t vctk vd_noise \
@@ -20,5 +22,3 @@ python3 train.py -m  unet \
                  --batchsize 40 \
 
 rm temp_path.json
-
-#                 --aug_effects low_pass clip reverb_rir reverb_freeverb high_pass treble bass fade \

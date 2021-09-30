@@ -1,15 +1,14 @@
 import torch.utils
 from torchaudio.transforms import MelScale
 import torch.utils.data
-from voicefixer import Vocoder
 from callbacks.base import *
 from tools.pytorch.losses import *
-from general_speech_restoration.config import Config
 from tools.pytorch.pytorch_util import *
+from single_task_speech_restoration.declip.unet.model_kqq import UNetResComplex_100Mb
+from single_task_speech_restoration.config import Config
 from tools.pytorch.random_ import *
 from tools.file.wav import *
-from tools.file.io import load_json, write_json
-from dataloaders.augmentation.base import add_noise_and_scale_with_HQ_with_Aug
+
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -30,7 +29,6 @@ def get_mel_weig(base=8):
     return norm/norm[0]
 
 def to_log(input):
-    assert torch.sum(input < 0) == 0, str(input)+" has negative values counts "+str(torch.sum(input < 0))
     return torch.log10(torch.clip(input, min=1e-8))
 
 def from_log(input):
@@ -49,8 +47,11 @@ class Discriminator_7(nn.Module):
 
         self.model = nn.Sequential(
             *discriminator_block(1, 16, bn=False),
+            nn.MaxPool2d((1,2),stride=(1,2)),
             *discriminator_block(16, 32),
+            nn.MaxPool2d((1, 2), stride=(1, 2)),
             *discriminator_block(32, 64),
+            nn.MaxPool2d((1, 2), stride=(1, 2)),
             *discriminator_block(64, 128),
         )
 
@@ -158,35 +159,14 @@ class BN_GRU(torch.nn.Module):
 class Generator(nn.Module):
     def __init__(self,n_mel,hidden,channels):
         super(Generator, self).__init__()
-        self.lstm = nn.Sequential(
-            nn.BatchNorm2d(1),
-            nn.Linear(n_mel, n_mel * 2),
-            BN_GRU(input_dim=n_mel*2, hidden_dim=n_mel*2, bidirectional=True, layer=2),
-            nn.ReLU(),
-            nn.Linear(n_mel*4, n_mel*2),
-            nn.ReLU(),
-            nn.Linear(n_mel*2, n_mel),
-        )
+        self.unet = UNetResComplex_100Mb(channels=channels)
 
-        self.lstm = nn.Sequential(
-            nn.BatchNorm2d(1),
-            nn.Linear(n_mel, 2),
-            BN_GRU(input_dim=2, hidden_dim=2, bidirectional=True, layer=2),
-            nn.ReLU(),
-            nn.Linear(4, 2),
-            nn.ReLU(),
-            nn.Linear(2, n_mel),
-        )
-
-    def forward(self,sp, mel_orig):
+    def forward(self,sp, noisy_wav):
         # Denoising
-        unet_out = self.lstm(to_log(mel_orig))
-        # masks
-        mel = unet_out + to_log(mel_orig)
-        # todo mel and addition here are in log scales
-        return {'mel': mel, "lstm_out":unet_out, "unet_out":unet_out}
+        unet_out = self.unet(sp, noisy_wav)['wav']
+        return {'wav': unet_out}
 
-class DNN(pl.LightningModule):
+class ResUNet(pl.LightningModule):
     def __init__(self, channels, type_target, nsrc=1, loss="l1",
                  lr=0.002, gamma=0.9,
                  batchsize=None, frame_length=None,
@@ -195,7 +175,7 @@ class DNN(pl.LightningModule):
                  # dataloaders
                  check_val_every_n_epoch=5,
                  ):
-        super(DNN, self).__init__()
+        super(ResUNet, self).__init__()
 
         if(sample_rate == 44100):
             window_size = 2048
@@ -232,12 +212,12 @@ class DNN(pl.LightningModule):
         self.simelspecloss = get_loss_function(loss_type="simelspec")
         self.l1loss = get_loss_function(loss_type="l1")
         self.bce_loss = get_loss_function(loss_type="bce")
+        self.f_loss = get_loss_function(loss_type="l1_sp")
 
         # self.am = AudioMetrics()
         # self.im = ImgMetrics()
         #
-        self.vocoder = Vocoder(sample_rate=44100)
-
+        # self.local_discriminator = Discriminator_7(feature_height=n_mel)
         self.discriminator = Discriminator_7(feature_height=n_mel)
 
         self.valid = None
@@ -250,6 +230,20 @@ class DNN(pl.LightningModule):
         self.downsample_ratio = 2 ** 6  # This number equals 2^{#encoder_blcoks}
         self.check_val_every_n_epoch = check_val_every_n_epoch
 
+        hidden = window_size // 2 + 1
+
+        self.mel = MelScale(n_mels=n_mel, sample_rate=sample_rate, n_stft=hidden)
+
+        # masking
+        self.generator = Generator(n_mel,hidden,channels)
+
+        window_size = 2048
+        hop_size = 441
+        center = True,
+        pad_mode = 'reflect'
+        window = 'hann'
+        freeze_parameters = True
+
         self.f_helper = FDomainHelper(
             window_size=window_size,
             hop_size=hop_size,
@@ -258,13 +252,6 @@ class DNN(pl.LightningModule):
             window=window,
             freeze_parameters=freeze_parameters,
         )
-
-        hidden = window_size // 2 + 1
-
-        self.mel = MelScale(n_mels=n_mel, sample_rate=sample_rate, n_stft=hidden)
-
-        # masking
-        self.generator = Generator(n_mel,hidden,channels)
 
         self.lr_lambda = lambda step: self.get_lr_lambda(step,
                                                         gamma = self.gamma,
@@ -277,12 +264,8 @@ class DNN(pl.LightningModule):
                                                         reduce_lr_steps=reduce_lr_steps)
 
         self.mel_weight_44k_128 = Config.mel_weight_44k_128
-
-        self.g_loss_weight = 0.01
-        self.d_loss_weight = 1
-
-    def get_vocoder(self):
-        return self.vocoder
+        # self.mel_weight_loss = get_mel_weig(10)
+        self.init_weights()
 
     def get_f_helper(self):
         return self.f_helper
@@ -301,8 +284,8 @@ class DNN(pl.LightningModule):
         else:
             return gamma ** (step // reduce_lr_steps)
 
-    def init_weights(self, module: nn.Module):
-        for m in module.modules():
+    def init_weights(self):
+        for m in self.modules():
             if type(m) in [nn.GRU, nn.LSTM, nn.RNN]:
                 for name, param in m.named_parameters():
                     if 'weight_ih' in name:
@@ -330,40 +313,24 @@ class DNN(pl.LightningModule):
         return self.generator(sp, mel_orig)
 
     def configure_optimizers(self):
-        optimizer_g = torch.optim.Adam([{'params': self.generator.parameters()}],
+        optimizer_g = torch.optim.Adam(self.generator.unet.parameters(),
                                        lr=self.lr, amsgrad=True, betas=(0.5, 0.999))
-        optimizer_d = torch.optim.Adam([{'params': self.discriminator.parameters()}],
-                                       lr=self.lr, amsgrad=True,
-                                       betas=(0.5, 0.999))
 
         scheduler_g = {
             'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer_g, self.lr_lambda),
             'interval': 'step',
             'frequency': 1,
         }
-        scheduler_d = {
-            'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer_d, self.lr_lambda),
-            'interval': 'step',
-            'frequency': 1,
-        }
-        return [optimizer_g, optimizer_d ], [scheduler_g, scheduler_d]
+        return [optimizer_g], [scheduler_g]
 
     def preprocess(self, batch, train=False, cutoff=None):
         if(train):
-            vocal = batch[self.type_target] # final target
-            noise = batch['noise_LR'] # augmented low resolution audio with noise
-            augLR = batch[self.type_target+'_aug_LR'] # # augment low resolution audio
-            LR = batch[self.type_target+'_LR']
-            # embed()
-            vocal, LR, augLR, noise = vocal.float().permute(0, 2, 1), LR.float().permute(0, 2, 1), augLR.float().permute(0, 2, 1), noise.float().permute(0, 2, 1)
+            vocal = batch[self.type_target]
+            noise = torch.zeros_like(batch['noise'])
+            LR = batch[self.type_target+'_aug']
+            vocal, LR, noise = vocal.float().permute(0, 2, 1), LR.float().permute(0, 2, 1), noise.float().permute(0, 2, 1)
             # LR, noise = self.add_random_noise(LR, noise)
-            snr, scale = [],[]
-            for i in range(vocal.size()[0]):
-                vocal[i,...], LR[i,...], augLR[i,...], noise[i,...], _snr, _scale = add_noise_and_scale_with_HQ_with_Aug(vocal[i,...],LR[i,...], augLR[i,...], noise[i,...], snr_l=-5,snr_h=45, scale_lower=0.3, scale_upper=1.0)
-                snr.append(_snr), scale.append(_scale)
-            # vocal, LR = self.amp_to_original_f(vocal, LR)
-            # noise = (noise * 0.0) + 1e-8 # todo
-            return vocal, augLR, LR,  noise + augLR
+            return vocal, LR, noise + LR
         else:
             if(cutoff is None):
                 LR_noisy = batch["noisy"]
@@ -381,68 +348,29 @@ class DNN(pl.LightningModule):
     def info(self,string:str):
         lg.info("On trainer-" + str(self.trainer.global_rank) + ": " + string)
 
-    def training_step(self, batch, batch_nb, optimizer_idx):
+    def training_step(self, batch, batch_nb):
         # dict_keys(['vocals', 'vocals_aug', 'vocals_augLR', 'noise'])
-        config = load_json("temp_path.json")
-        if("g_loss_weight" not in config.keys()):
-            config['g_loss_weight'] = self.g_loss_weight
-            config['d_loss_weight'] = self.d_loss_weight
-            write_json(config,"temp_path.json")
-        elif(config['g_loss_weight'] != self.g_loss_weight or config['d_loss_weight'] != self.d_loss_weight):
-            print("Update d_loss weight, from", self.d_loss_weight, "to",config['d_loss_weight'])
-            print("Update g_loss weight, from", self.g_loss_weight, "to",config['g_loss_weight'])
-            self.g_loss_weight = config['g_loss_weight']
-            self.d_loss_weight = config['d_loss_weight']
+        self.vocal, self.LR, self.LR_noisy = self.preprocess(batch, train=True)
 
-        if (optimizer_idx == 0):
-            self.vocal, self.augLR, _, self.LR_noisy = self.preprocess(batch, train=True)
+        # for i in range(self.vocal.size()[0]):
+        #     save_wave(tensor2numpy(self.vocal[i, ...]), str(i) + "vocal" + ".wav", sample_rate=44100)
+        #     save_wave(tensor2numpy(self.LR_noisy[i, ...]), str(i) + "LR_noisy" + ".wav", sample_rate=44100)
 
-            # for i in range(self.vocal.size()[0]):
-            #     save_wave(tensor2numpy(self.vocal[i, ...]), str(i) + "vocal" + ".wav", sample_rate=44100)
-            #     save_wave(tensor2numpy(self.LR_noisy[i, ...]), str(i) + "LR_noisy" + ".wav", sample_rate=44100)
+        # all_mel_e2e in non-log scale
+        self.sp_target, self.mel_target = self.pre(self.vocal)
+        # self.sp_LR_target, self.mel_LR_target = self.pre(self.LR)
+        self.sp_LR_target_noisy, self.mel_LR_target_noisy = self.pre(self.LR_noisy)
 
-            # all_mel_e2e in non-log scale
-            _, self.mel_target = self.pre(self.vocal)
-            # self.sp_LR_target, self.mel_LR_target = self.pre(self.augLR)
-            self.sp_LR_target_noisy, self.mel_LR_target_noisy = self.pre(self.LR_noisy)
+        self.generated = self(self.sp_LR_target_noisy, self.LR_noisy)
 
-            if (self.valid is None or self.valid.size()[0] != self.mel_target.size()[0]):
-                self.valid = torch.ones(self.mel_target.size()[0], 1, self.mel_target.size()[2], 1)
-                self.valid = self.valid.type_as(self.mel_target)
-            if (self.fake is None or self.fake.size()[0] != self.mel_target.size()[0]):
-                self.fake = torch.zeros(self.mel_target.size()[0], 1, self.mel_target.size()[2], 1)
-                self.fake = self.fake.type_as(self.mel_target)
+        targ_loss = self.f_loss(self.generated['wav'], self.vocal)
+        # addition_loss = self.loss(self.generated['addition'], target_addition)
+        loss = targ_loss
+        self.log("targ-l", targ_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
 
-            self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
-
-            targ_loss = self.l1loss(self.generated['mel'], to_log(self.mel_target))
-
-            self.log("targ-l", targ_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
-
-            loss = targ_loss
-
-            if(self.train_step < 0): # disable discriminative training
-                g_loss = self.bce_loss(self.discriminator(self.generated['mel']), self.valid)
-                self.log("g_l", g_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
-                # print("g_loss", g_loss)
-                all_loss = loss + self.g_loss_weight * g_loss
-                self.log("all_loss", all_loss, on_step=True, on_epoch=True, logger=True, sync_dist=True)
-            else:
-                all_loss = loss
-            self.train_step += 0.5
-            return {"loss": all_loss}
-
-        elif(optimizer_idx == 1):
-            if(self.train_step < 0):
-                self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
-                self.train_step += 0.5
-                real_loss = self.bce_loss(self.discriminator(to_log(self.mel_target)),self.valid)
-                self.log("r_l", real_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
-                fake_loss = self.bce_loss(self.discriminator(self.generated['mel'].detach()), self.fake)
-                self.log("d_l", fake_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
-                d_loss = self.d_loss_weight * (real_loss+fake_loss) / 2
-                self.log("discriminator_loss", d_loss, on_step=True, on_epoch=True, logger=True, sync_dist=True)
-                return {"loss": d_loss}
+        all_loss = loss
+        self.train_step += 1.0
+        return {"loss": all_loss}
 
     def clip(self,*args):
         val_max, val_min = [],[]
@@ -450,4 +378,3 @@ class DNN(pl.LightningModule):
             val_max.append(torch.max(each))
             val_min.append(torch.min(each))
         return max(val_max), min(val_min)
-

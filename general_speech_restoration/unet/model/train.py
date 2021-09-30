@@ -13,12 +13,13 @@ from pynvml import *
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
-from general_speech_restoration.voicefixer.get_model import *
-from general_speech_restoration.voicefixer.dm_sr_rand_sr_order import SrRandSampleRate
+from general_speech_restoration.unet.get_model import *
+from general_speech_restoration.unet.dm_sr_rand_sr_order import SrRandSampleRate
 from dataloaders.main import DATA
 from callbacks.base import *
 from callbacks.verbose import *
 from tools.file.hdfs import *
+# from argdoc import generate_doc
 
 import time
 from argparse import ArgumentParser
@@ -34,7 +35,7 @@ def report_dataset(names):
 if __name__ == "__main__":
     parser = ArgumentParser()
 
-    parser.add_argument("-m", "--model", default="lstm", help="Model name you wanna use.")
+    parser.add_argument("-m", "--model", required=True, default="lstm", help="Model name you wanna use.")
     parser.add_argument("-l", "--loss", default="l1_sp", help="Loss function")
     parser.add_argument("-t", "--train_dataset", nargs="+", default=["vctk","vocal_wav_44k","vd_noise","dcase"], help="Train dataset")
     parser.add_argument("-v", "--val_dataset", nargs="+", default=[], help="validation datasets.")
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=44100)
     parser.add_argument("--early_stop_tolerance", type=int, default=5)
     parser.add_argument("--early_stop_crateria", default="min", help="min or max")
-
+    # print(generate_doc(parser))
     ROOT = Config.ROOT
 
     if (os.path.exists("temp_path.json")):

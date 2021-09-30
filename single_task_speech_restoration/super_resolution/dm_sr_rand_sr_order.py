@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from dataloaders.dataloader.FixLengthAugRandomDataLoader import FixLengthAugRandomDataLoader
 from dataloaders.dataloader.PairedFullLengthDataLoader import PairedFullLengthDataLoader
+from dataloaders.dataloader.FixLengthAugRandomDataLoader import FixLengthAugRandomDataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tools.pytorch.random_ import *
 from torch.utils.data import ConcatDataset
@@ -66,14 +66,12 @@ class SrRandSampleRate(pl.LightningDataModule):
                                                    aug_sources=self.aug_sources,
                                                    aug_effects=self.aug_effects,
                                                    hours_for_an_epoch = self.hours_for_an_epoch)
-
-            val_datasets = []
-            if(len(list(self.test_data.keys())) != 0):
-                for val_name in self.val_datasets:
-                    val_datasets.append(PairedFullLengthDataLoader(dataset_name=val_name,
-                                                                   sample_rate=self.sample_rate,
-                                                                   data=self.test_data))
-            self.val = ConcatDataset(val_datasets)
+            # val_datasets = []
+            # for val_name in self.val_datasets:
+            #     val_datasets.append(PairedFullLengthDataLoader(dataset_name=val_name,
+            #                                                    sample_rate=self.sample_rate,
+            #                                                    data=self.test_data))
+            # self.val = ConcatDataset(val_datasets)
 
     def train_dataloader(self) -> DataLoader:
         if(self.distributed):
@@ -82,12 +80,19 @@ class SrRandSampleRate(pl.LightningDataModule):
         else:
             return DataLoader(self.train, batch_size=self.batchsize, shuffle=True, num_workers=self.num_workers,collate_fn=collate_fn)
 
-    def val_dataloader(self):
-        if(self.distributed):
-            sampler = DistributedSampler(self.val,shuffle=False)
-            return DataLoader(self.val, sampler = sampler, batch_size=1, pin_memory=True, collate_fn=collate_fn_val)
-        else:
-            return DataLoader(self.val, batch_size=1, shuffle=False, collate_fn=collate_fn_val)
+    # def val_dataloader(self):
+    #     if(self.distributed):
+    #         sampler = DistributedSampler(self.val,shuffle=False)
+    #         return DataLoader(self.val, sampler = sampler, batch_size=1, num_workers=8, pin_memory=True, collate_fn=collate_fn_val)
+    #     else:
+    #         return DataLoader(self.val, batch_size=1, shuffle=False, num_workers=8, collate_fn=collate_fn_val)
+
+    # def val_dataloader(self):
+    #     if(self.distributed):
+    #         sampler = DistributedSampler(self.val,shuffle=False)
+    #         return DataLoader(self.val, sampler = sampler, batch_size=1, pin_memory=True, collate_fn=collate_fn_val)
+    #     else:
+    #         return DataLoader(self.val, batch_size=1, shuffle=False, collate_fn=collate_fn_val)
 
 def stack_convert(li: list):
     for i in range(len(li)):
@@ -141,7 +146,7 @@ def collate_fn(list_data):
         cutoffs.append(int(uniform_torch(lower=int(glob_source_sample_rate_low // 2),upper=int(glob_source_sample_rate_high // 2))))
         orders.append(int(uniform_torch(lower=2,upper=10)))
         # filters.append(random_choose_list(["stft_hard"]))
-        filters.append(random_choose_list(["cheby1","ellip","bessel","stft_hard","stft","butter"]))
+        filters.append(random_choose_list(["cheby1"]))
         # snr.append(float(uniform_torch(SNRLOW, SNR_HIGH)))
 
     for key in keys:
@@ -156,10 +161,7 @@ def collate_fn(list_data):
             for x, c, o, f in zip(list_data, cutoffs, orders, filters):
                 chance = uniform_torch(lower=0, upper=1000)
                 data = lowpass(x[key][...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type=f)[..., None]
-                if (int(chance) % 2 == 0):
-                    lowpass_data.append(lowpass(data[...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type="stft")[..., None])
-                else:
-                    lowpass_data.append(data)
+                lowpass_data.append(lowpass(data[...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type="stft")[..., None])
             ret[key+"_LR"] = stack_convert(lowpass_data)
 
         if("noise" in key):
@@ -171,9 +173,6 @@ def collate_fn(list_data):
                     lowpass_data.append(data)
                 else:
                     data = lowpass(x[key][...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type=f)[..., None]
-                    if(int(chance) % 3 == 0):
-                        lowpass_data.append(lowpass(data[...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type="stft")[..., None])
-                    else:
-                        lowpass_data.append(data)
+                    lowpass_data.append(lowpass(data[...,0], highcut=c, fs=glob_target_sample_rate, order=o, _type="stft")[..., None])
             ret[key+"_LR"] = stack_convert(lowpass_data)
     return ret

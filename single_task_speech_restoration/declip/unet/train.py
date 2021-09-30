@@ -1,6 +1,5 @@
 import git
 import sys
-import os
 
 git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
 sys.path.append(git_root)
@@ -13,17 +12,17 @@ from pynvml import *
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
-from general_speech_restoration.voicefixer.get_model import *
-from general_speech_restoration.voicefixer.dm_sr_rand_sr_order import SrRandSampleRate
+from single_task_speech_restoration.declip.get_model import *
+from single_task_speech_restoration.declip.dm_sr_rand_sr_order import SrRandSampleRate
 from dataloaders.main import DATA
 from callbacks.base import *
 from callbacks.verbose import *
-from tools.file.hdfs import *
 
-import time
 from argparse import ArgumentParser
-from general_speech_restoration.config import Config
+from single_task_speech_restoration.config import Config
 from tools.dsp.lowpass import *
+
+Config.aug_conf['clip']['prob'] = [1.0]
 
 def report_dataset(names):
     res = "#"
@@ -34,7 +33,7 @@ def report_dataset(names):
 if __name__ == "__main__":
     parser = ArgumentParser()
 
-    parser.add_argument("-m", "--model", default="lstm", help="Model name you wanna use.")
+    parser.add_argument("-m", "--model", required=True, default="lstm", help="Model name you wanna use.")
     parser.add_argument("-l", "--loss", default="l1_sp", help="Loss function")
     parser.add_argument("-t", "--train_dataset", nargs="+", default=["vctk","vocal_wav_44k","vd_noise","dcase"], help="Train dataset")
     parser.add_argument("-v", "--val_dataset", nargs="+", default=[], help="validation datasets.")
@@ -46,8 +45,8 @@ if __name__ == "__main__":
     parser.add_argument("-san", '--sanity_val_steps', type=int, default=2)
     parser.add_argument("--dl", type=str, default="FixLengthAugRandomDataLoader") # "FixLengthFixSegRandomDataLoader", "FixLengthThreshRandDataLoader"
     parser.add_argument("--overlap_num", type=int, default=1)
-    parser.add_argument("--aug_sources", nargs="+", default=["vocals"], help="validation datasets.")
-    parser.add_argument("--aug_effects", nargs="+", default=[], help="validation datasets.")
+    parser.add_argument("--aug_sources", nargs="+", default=["vocals"], help="conduct augmentation on which source")
+    parser.add_argument("--aug_effects", nargs="+", default=[], help="augmentation effects")
     # experiment
     parser.add_argument("--source_sample_rate_low", type=int, default=8000)
     parser.add_argument("--source_sample_rate_high", type=int, default=24000)
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=44100)
     parser.add_argument("--early_stop_tolerance", type=int, default=5)
     parser.add_argument("--early_stop_crateria", default="min", help="min or max")
-
+    # print(generate_doc(parser))
     ROOT = Config.ROOT
 
     if (os.path.exists("temp_path.json")):
@@ -175,3 +174,4 @@ if __name__ == "__main__":
                                          progress_bar_refresh_rate=1, flush_logs_every_n_steps=200)
     dm.setup('fit')
     trainer.fit(model, datamodule=dm)
+    # trainer.save_checkpoint("example.ckpt")
