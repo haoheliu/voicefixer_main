@@ -4,7 +4,7 @@ import torch.utils.data
 from callbacks.base import *
 from tools.pytorch.losses import *
 from tools.pytorch.pytorch_util import *
-from single_task_speech_restoration.sr_unet.unet.model_kqq import UNetResComplex_100Mb
+from single_task_speech_restoration.super_resolution.unet.model_kqq import UNetResComplex_100Mb
 from single_task_speech_restoration.config import Config
 from tools.pytorch.random_ import *
 from tools.file.wav import *

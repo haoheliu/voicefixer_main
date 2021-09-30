@@ -6,7 +6,7 @@ git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-to
 sys.path.append(git_root)
 
 from tools.file.wav import *
-from single_task_speech_restoration.declip_unet.unet.model import ResUNet as Model
+from single_task_speech_restoration.declip.unet.model import ResUNet as Model
 
 from tools.pytorch.pytorch_util import *
 from tools.file.hdfs import *
@@ -144,7 +144,7 @@ def handler(input, output, target, ckpt, device, needrefresh=False, meta={}):
 
 if __name__ == '__main__':
     models = {
-        "5.1.2_unet_dereverb": "iclr_2022/derev_unet/unet/a6249_log/2021-07-16-unet-#vocalsnoise#-#vctkvd_noisevocal_wav_44kdcasehq_ttsnoise_44k#-#vd_test#-fixed_4k_44k_mask_gan-l1#44100_44100#/version_0/checkpoints/epoch=20.ckpt",
+        "5.1.2_unet_dereverb": "iclr_2022/dereverb/unet/a6249_log/2021-07-16-unet-#vocalsnoise#-#vctkvd_noisevocal_wav_44kdcasehq_ttsnoise_44k#-#vd_test#-fixed_4k_44k_mask_gan-l1#44100_44100#/version_0/checkpoints/epoch=20.ckpt",
     }
 
     key = "5.1.2_unet_dereverb"

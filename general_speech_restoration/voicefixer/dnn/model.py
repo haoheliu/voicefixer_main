@@ -419,7 +419,7 @@ class DNN(pl.LightningModule):
 
             loss = targ_loss
 
-            if(self.train_step >= 280000):
+            if(self.train_step < 0): # disable discriminative training
                 g_loss = self.bce_loss(self.discriminator(self.generated['mel']), self.valid)
                 self.log("g_l", g_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
                 # print("g_loss", g_loss)
@@ -431,7 +431,7 @@ class DNN(pl.LightningModule):
             return {"loss": all_loss}
 
         elif(optimizer_idx == 1):
-            if(self.train_step >= 250000):
+            if(self.train_step < 0):
                 self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
                 self.train_step += 0.5
                 real_loss = self.bce_loss(self.discriminator(to_log(self.mel_target)),self.valid)
@@ -448,14 +448,3 @@ class DNN(pl.LightningModule):
             val_max.append(torch.max(each))
             val_min.append(torch.min(each))
         return max(val_max), min(val_min)
-
-if __name__ == "__main__":
-    from thop import profile
-    # 增加可读性
-    from thop import clever_format
-
-    model = DNN(channels=1,type_target="", sample_rate=44100)
-    input = torch.abs(torch.randn(1, 1, 100,1025))
-    input2 = torch.abs(torch.randn(1, 1, 100,128))
-    flops, params = profile(model.generator, inputs=(input,input2))
-    flops, params = clever_format([flops, params], "%.3f")

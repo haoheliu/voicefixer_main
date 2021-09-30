@@ -1,3 +1,6 @@
+pwd
+export TRAIL_NAME="pc"
+
 python3 train.py -m  unet \
                   -l l1 \
                  -t vctk vd_noise \

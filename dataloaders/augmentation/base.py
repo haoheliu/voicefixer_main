@@ -109,7 +109,6 @@ def add_noise_and_scale_with_HQ(HQ, front, noise, snr_l=-5, snr_h=35, scale_lowe
     # print("after scale", torch.max(noisy), torch.max(noise), torch.max(front), snr, scale)
     return HQ, front, noise, snr, scale
 
-
 def _random_scale(lower = 0.3, upper=0.9):
     return float(uniform_torch(lower,upper))
 

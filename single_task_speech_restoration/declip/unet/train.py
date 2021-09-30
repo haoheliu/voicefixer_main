@@ -12,8 +12,8 @@ from pynvml import *
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
-from single_task_speech_restoration.declip_unet.get_model import *
-from single_task_speech_restoration.declip_unet.dm_sr_rand_sr_order import SrRandSampleRate
+from single_task_speech_restoration.declip.get_model import *
+from single_task_speech_restoration.declip.dm_sr_rand_sr_order import SrRandSampleRate
 from dataloaders.main import DATA
 from callbacks.base import *
 from callbacks.verbose import *

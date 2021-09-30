@@ -6,7 +6,7 @@ git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-to
 sys.path.append(git_root)
 
 from tools.file.wav import *
-from general_speech_restoration.voicefixer.unet.model import ResUNet as Model
+from general_speech_restoration.voicefixer.lstm.model import ResUNet as Model
 
 from tools.pytorch.pytorch_util import *
 from tools.file.hdfs import *
@@ -166,7 +166,6 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--limit_numbers", default=None, help="")
     parser.add_argument("-d", "--description", default="", help="")
     parser.add_argument("-t", "--testset", default="base", help="")
-    parser.add_argument("-g", "--git", default=False, help="")
     args = parser.parse_args()
 
     if(len(args.ckpt) == 0):

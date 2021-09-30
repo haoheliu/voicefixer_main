@@ -1,9 +1,11 @@
+import git
 import sys
+import os
 
-sys.path.append("/Users/admin/Documents/projects/arnold_workspace/src")
-sys.path.append("/opt/tiger/lhh_arnold_base/arnold_workspace/src")
+git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
+sys.path.append(git_root)
 
-from task_music_source_separation.voice_separation.modules import *
+from single_task_speech_restoration.modules import *
 
 from tools.pytorch.losses import *
 from tools.file.hdfs import *

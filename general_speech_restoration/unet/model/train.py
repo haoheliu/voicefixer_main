@@ -1,7 +1,9 @@
+import git
 import sys
+import os
 
-sys.path.append("/Users/admin/Documents/projects/arnold_workspace/src")
-sys.path.append("/opt/tiger/lhh_arnold_base/arnold_workspace/src")
+git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
+sys.path.append(git_root)
 
 import torchaudio
 
@@ -16,10 +18,12 @@ from general_speech_restoration.unet.dm_sr_rand_sr_order import SrRandSampleRate
 from dataloaders.main import DATA
 from callbacks.base import *
 from callbacks.verbose import *
+from tools.file.hdfs import *
+# from argdoc import generate_doc
 
 import time
 from argparse import ArgumentParser
-from iclr_2022.config import Config
+from general_speech_restoration.config import Config
 from tools.dsp.lowpass import *
 
 def report_dataset(names):
@@ -28,27 +32,13 @@ def report_dataset(names):
         res += each
     return res+"#"
 
-# Clipping effects only
-Config.aug_sources = ["vocals"]
-# Config.aug_effects = ["clip"]
-# Config.aug_conf['clip'] = {
-#             'prob': [1.0], # todo
-#             'louder_time': [1.0, 12.0]
-#         }
-
-# Config.aug_effects = ["reverb_rir"]
-# Config.aug_conf['reverb_rir'] = {
-#             'prob': [1.0],
-#             'rir_file_name': None
-#         }
-
 if __name__ == "__main__":
     parser = ArgumentParser()
 
-    parser.add_argument("-m", "--model", default="lstm", help="Model name you wanna use.")
+    parser.add_argument("-m", "--model", required=True, default="lstm", help="Model name you wanna use.")
     parser.add_argument("-l", "--loss", default="l1_sp", help="Loss function")
     parser.add_argument("-t", "--train_dataset", nargs="+", default=["vctk","vocal_wav_44k","vd_noise","dcase"], help="Train dataset")
-    parser.add_argument("-v", "--val_dataset", nargs="+", default=["vctk"], help="validation datasets.")
+    parser.add_argument("-v", "--val_dataset", nargs="+", default=[], help="validation datasets.")
     parser.add_argument("-t_type", "--train_data_type", nargs="+", default=["vocals","noise"], help="Training data types.")
     parser.add_argument("-c", "--check_val_epoch", type=int, default=50,help="Every 10 hours of training data is called an epoch.")
     parser.add_argument("-r", '--reload', type=str, default="")
@@ -57,7 +47,8 @@ if __name__ == "__main__":
     parser.add_argument("-san", '--sanity_val_steps', type=int, default=2)
     parser.add_argument("--dl", type=str, default="FixLengthAugRandomDataLoader") # "FixLengthFixSegRandomDataLoader", "FixLengthThreshRandDataLoader"
     parser.add_argument("--overlap_num", type=int, default=1)
-
+    parser.add_argument("--aug_sources", nargs="+", default=["vocals"], help="validation datasets.")
+    parser.add_argument("--aug_effects", nargs="+", default=[], help="validation datasets.")
     # experiment
     parser.add_argument("--source_sample_rate_low", type=int, default=8000)
     parser.add_argument("--source_sample_rate_high", type=int, default=24000)
@@ -75,12 +66,8 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=44100)
     parser.add_argument("--early_stop_tolerance", type=int, default=5)
     parser.add_argument("--early_stop_crateria", default="min", help="min or max")
-
+    # print(generate_doc(parser))
     ROOT = Config.ROOT
-
-    if ("tiger" in ROOT): ARNOLD = True
-    else: ARNOLD = False
-    assert len(Config.TRAIL_NAME) != 0
 
     if (os.path.exists("temp_path.json")):
         os.remove("temp_path.json")
@@ -89,6 +76,10 @@ if __name__ == "__main__":
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+
+    Config.aug_sources = args.aug_sources
+    Config.aug_effects = args.aug_effects
+
     current = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     name = current + "-" + args.model+"-"+report_dataset(args.train_data_type)+"-"+\
            report_dataset(args.train_dataset)+"-" + \
@@ -96,9 +87,9 @@ if __name__ == "__main__":
            args.name + "-" + args.loss + "#"+str(args.source_sample_rate_low)+"_"+ str(args.source_sample_rate_high) + "#"
 
     if (len(args.reload) != 0):
-        name += "_reload_" + (args.reload).replace("/", ".")
+        name += "_reload"
 
-    if (ARNOLD):
+    if (torch.cuda.is_available()):
         nvmlInit()
         if(args.gpu_nums == 0): gpu_nums = int(nvmlDeviceGetCount())
         else: gpu_nums = args.gpu_nums
@@ -114,6 +105,9 @@ if __name__ == "__main__":
     if (gpu_nums != 0): seconds_per_step = gpu_nums * args.batchsize * args.frame_length
     else: seconds_per_step = args.batchsize * args.frame_length
 
+    print("The model You choose: ")
+    print(args.model)
+
     model = get_model(args.model)(channels=1, type_target="vocals", loss=args.loss,
                              # training
                              lr=args.lr,
@@ -124,6 +118,7 @@ if __name__ == "__main__":
                              check_val_every_n_epoch = args.check_val_epoch,
                              warm_up_steps=int(args.warmup_data * 3600 / seconds_per_step),
                              reduce_lr_steps=int(args.reduce_lr_period * 3600 / seconds_per_step))
+
     print(Config.aug_conf)
     print(Config.aug_sources)
     print(Config.aug_effects)
@@ -134,11 +129,11 @@ if __name__ == "__main__":
         distributed=distributed, overlap_num=args.overlap_num,
         train_loader=args.dl,
         train_data=DATA.merge([DATA.get_trainset(set) for set in args.train_dataset]),
-        val_data=DATA.merge([DATA.get_testset(set) for set in args.val_dataset]),
+        val_data=DATA.merge([DATA.get_testset(set) for set in args.val_dataset]) if(len(args.val_dataset) != 0) else {},
         train_data_type=args.train_data_type, val_datasets=args.val_dataset,
-        batchsize=args.batchsize, frame_length=args.frame_length, num_workers=22, sample_rate=args.sample_rate,
-        aug_conf=Config.aug_conf, aug_sources=Config.aug_sources, aug_effects=Config.aug_effects,
-        hours_for_an_epoch=100
+        batchsize=args.batchsize, frame_length=args.frame_length, num_workers=22 if (torch.cuda.is_available()) else 0,
+        sample_rate=args.sample_rate, aug_conf=Config.aug_conf, aug_sources=Config.aug_sources, aug_effects=Config.aug_effects,
+        hours_for_an_epoch=500
     )
 
     callbacks = []
@@ -151,11 +146,11 @@ if __name__ == "__main__":
                           save_top_k=-1,
                           mode='min',
                       ),
-                      BackUpHDFS(
-                          model=model,
-                          current_dir=os.getcwd(),
-                          save_step_frequency=int(args.back_hdfs_every_hours * 103 * 3600 / seconds_per_step)
-                      ),
+                      # BackUpHDFS(
+                      #     model=model,
+                      #     current_dir=os.getcwd(),
+                      #     save_step_frequency=int(args.back_hdfs_every_hours * 103 * 3600 / seconds_per_step)
+                      # ),
                       initLogDir(current_dir=os.getcwd()),
                       # ReportDatasets(dm=dm, config=Config),
                       # EarlyStop(tolerance=args.early_stop_tolerance,type=args.early_stop_crateria)
@@ -167,7 +162,7 @@ if __name__ == "__main__":
 
     trainer = Trainer.from_argparse_args(args,
                                          gpus=gpu_nums,
-                                         plugins=DDPPlugin(find_unused_parameters=True),
+                                         plugins=DDPPlugin(find_unused_parameters=True) if (torch.cuda.is_available()) else None,
                                          max_epochs=args.max_epoches,
                                          terminate_on_nan=True,
                                          num_sanity_val_steps=args.sanity_val_steps,

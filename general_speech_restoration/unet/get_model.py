@@ -1,4 +1,4 @@
-from general_speech_restoration.unet.model_kqq_lstm_mask_gan.model import DNN as unet
+from general_speech_restoration.unet.model.model import ResUNet as unet
 
 def get_model(name:str):
     if(name == "unet"):

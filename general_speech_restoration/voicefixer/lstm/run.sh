@@ -1,4 +1,5 @@
 pwd
+export TRAIL_NAME="pc"
 
 python3 train.py -m  lstm \
                   -l l1 \

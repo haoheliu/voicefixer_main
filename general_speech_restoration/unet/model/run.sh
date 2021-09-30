@@ -1,8 +1,13 @@
-python3 train.py -m  unet --limit_val_batches 8\
+pwd
+export TRAIL_NAME="pc"
+
+python3 train.py -m  unet \
                   -l l1 \
-                 -t vctk vd_noise vocal_wav_44k dcase hq_tts noise_44k \
-                 -v vd_test \
+                 -t vctk vd_noise \
+                 -v gsr \
                  -t_type vocals noise \
+                 --aug_sources vocals \
+                 --aug_effects low_pass clip reverb_rir \
                  -c 1 \
                  --lr 0.001 \
                  --source_sample_rate_low 1500 \
@@ -13,12 +18,6 @@ python3 train.py -m  unet --limit_val_batches 8\
                  -n fixed_4k_44k_mask_gan \
                  --save_metric_monitor val_loss \
                  --early_stop_tolerance 64 \
-                 --batchsize 8 \
+                 --batchsize 8
 
 rm temp_path.json
-
-python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy.py &
-python3 /opt/tiger/lhh_arnold_base/arnold_workspace/env/occupy.py &
-
-
-#                 -t vocal_wav_44k dcase vd_noise \

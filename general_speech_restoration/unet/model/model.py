@@ -1,13 +1,15 @@
 import torch.utils
 from torchaudio.transforms import MelScale
 import torch.utils.data
+from voicefixer import Vocoder
 from callbacks.base import *
 from tools.pytorch.losses import *
-from iclr_2022.config import Config
+from general_speech_restoration.config import Config
 from tools.pytorch.pytorch_util import *
-from general_speech_restoration.unet.model_kqq_lstm_mask_gan.model_kqq import UNetResComplex_100Mb
+from general_speech_restoration.unet.model.model_kqq import UNetResComplex_100Mb
 from tools.pytorch.random_ import *
 from tools.file.wav import *
+from tools.file.io import load_json, write_json
 from dataloaders.augmentation.base import add_noise_and_scale_with_HQ
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -97,6 +99,7 @@ class Discriminator_8(nn.Module):
 
 class Discriminator_9(nn.Module):
     def __init__(self, feature_height):
+
         super(Discriminator_9, self).__init__()
 
         def discriminator_block(in_feat, out_feat, bn=True):
@@ -189,7 +192,7 @@ class Generator(nn.Module):
         unet_out = self.unet(clean, noisy_wav)['wav']
         return {'wav': unet_out, "clean": clean}
 
-class DNN(pl.LightningModule):
+class ResUNet(pl.LightningModule):
     def __init__(self, channels, type_target, nsrc=1, loss="l1",
                  lr=0.002, gamma=0.9,
                  batchsize=None, frame_length=None,
@@ -198,7 +201,7 @@ class DNN(pl.LightningModule):
                  # dataloaders
                  check_val_every_n_epoch=5,
                  ):
-        super(DNN, self).__init__()
+        super(ResUNet, self).__init__()
 
         if(sample_rate == 44100):
             window_size = 2048

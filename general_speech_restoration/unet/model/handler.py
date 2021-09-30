@@ -6,7 +6,7 @@ git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-to
 sys.path.append(git_root)
 
 from tools.file.wav import *
-from single_task_speech_restoration.dereverb.unet.model import ResUNet as Model
+from general_speech_restoration.unet.model import ResUNet as Model
 
 from tools.pytorch.pytorch_util import *
 from tools.file.hdfs import *
