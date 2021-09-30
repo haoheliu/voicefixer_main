@@ -6,6 +6,19 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 
 [![46dPxJ.png](https://z3.ax1x.com/2021/09/26/46dPxJ.png)](https://imgtu.com/i/46dPxJ)
 
+- [VoiceFixer](#voicefixer)
+  * [Materials](#materials)
+  * [Usage](#usage)
+    + [Environment](#environment)
+    + [General Speech Restoration (GSR)](#general-speech-restoration--gsr-)
+      - [Train from scratch](#train-from-scratch)
+      - [Evaluation](#evaluation)
+    + [Single Task Speech Restoration (SSR)](#single-task-speech-restoration--ssr-)
+      - [Train from scratch](#train-from-scratch-1)
+      - [Evaluation](#evaluation-1)
+  * [Project Structure](#project-structure)
+  * [Citation](#citation)
+  
 ## Materials
 - Preprint on *arxiv*: https://arxiv.org/abs/2109.13731 
 - [Demo page](https://haoheliu.github.io/demopage-voicefixer/) contains comparison between single task speech restoration, general speech restoration, and voicefixer.
