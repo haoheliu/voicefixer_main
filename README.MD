@@ -6,28 +6,27 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 
 [![46dPxJ.png](https://z3.ax1x.com/2021/09/26/46dPxJ.png)](https://imgtu.com/i/46dPxJ)
 
-## Paper
-Preprint on *arxiv*: https://arxiv.org/abs/2109.13731 
-
-## Demo
+## Materials
+- Preprint on *arxiv*: https://arxiv.org/abs/2109.13731 
 - [Demo page](https://haoheliu.github.io/demopage-voicefixer/) contains comparison between single task speech restoration, general speech restoration, and voicefixer.
+- Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See [Gradio Web Demo](https://huggingface.co/spaces/akhaliq/VoiceFixer)
 - We wrote a [pip package](https://pypi.org/project/voicefixer/0.0.6/) for voicefixer.
 - You can try voicefixer using your own voice on [colab](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing)!
 
 ## Usage
 
-## Environment
+### Environment
 ```shell script
 # Download dataset and prepare running environment
 source init.sh 
 ```
 
-## General Speech Restoration (GSR)
+### General Speech Restoration (GSR)
 
 **Here we take *VF_UNet*(voicefixer with unet as analysis module) as an example.**
 Other GSR model have the similar folder structure, training entry and evaluation logic.
 
-### Train from scratch 
+#### Train from scratch 
 
 Change directory and run training entry.
 
@@ -68,7 +67,7 @@ After that, you will automatically get a log directory that look like this
                 └── hparams.yaml
 ``` 
 
-### Evaluation
+#### Evaluation
 
 Automatic evaluation and generate .csv file for the GSR evaluation results.
 
@@ -124,7 +123,7 @@ python3 handler.py  -c <str, path-to-checkpoint> \
 **Here we take enhancement *UNet*(Enh-UNet) as an example.**
 Other SSR model have the similar folder structure, training entry and evaluation logic.
 
-### Train from scratch
+#### Train from scratch
 
 Change directory and run training entry
 
@@ -158,7 +157,7 @@ After that, you will automatically get a log directory that look like this
                 └── hparams.yaml
 ```
 
-### Evaluation
+#### Evaluation
 
 Automatic evaluation and generate .csv file for the GSR evaluation results.
 
@@ -208,7 +207,7 @@ python3 handler.py  -c <str, path-to-checkpoint> \
                     -d <str, description of this evaluation> \ 
 ```
 
-# Project Structure
+## Project Structure
 
 ``` python
 .
@@ -269,7 +268,7 @@ python3 handler.py  -c <str, path-to-checkpoint> \
 └── callbacks
 ```
 
-# Citation
+## Citation
 
 >   @misc{liu2021voicefixer,   
 >       title={VoiceFixer: Toward General Speech Restoration With Neural Vocoder},   
