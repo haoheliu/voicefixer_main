@@ -9,9 +9,9 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 ## Materials
 - Preprint on *arxiv*: https://arxiv.org/abs/2109.13731 
 - [Demo page](https://haoheliu.github.io/demopage-voicefixer/) contains comparison between single task speech restoration, general speech restoration, and voicefixer.
-- Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See [Gradio Web Demo](https://huggingface.co/spaces/akhaliq/VoiceFixer)
-- We wrote a [pip package](https://pypi.org/project/voicefixer/0.0.6/) for voicefixer.
+- We wrote a [pip package](https://pypi.org/project/voicefixer) for voicefixer.
 - You can try voicefixer using your own voice on [colab](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing)!
+- Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See [Gradio Web Demo](https://huggingface.co/spaces/akhaliq/VoiceFixer)
 
 ## Usage
 
