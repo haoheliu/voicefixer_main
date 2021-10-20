@@ -26,7 +26,7 @@ if [ ! -d "datasets/se/vd_noise" ]; then
 fi
 python3 datasets/datasetParser/vctk_demand.py
 
-if [ ! -d "datasets/se/Testsets" ]; then
+if [ ! -d "datasets/se/TestSets" ]; then
   echo "Preparing GSR and SSR test sets"
   if [ ! -f "datasets/se/GSR_and_SSR_testsets.zip" ]; then
     wget https://zenodo.org/record/5528144/files/GSR_and_SSR_testsets.zip?download=1 -O datasets/se/GSR_and_SSR_testsets.zip
