@@ -10,6 +10,7 @@ asteroid>=0.5.0
 torch
 pytorch_lightning
 voicefixer
+inplace_abn
 
 librosa
 torchlibrosa==0.0.7

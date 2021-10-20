@@ -2,6 +2,7 @@ pip3 install --upgrade virtualenv==16.7.9 # this version virtualenv support the 
 virtualenv --no-site-packages voicefixer # create new environment
 source voicefixer/bin/activate # activate environment
 pip3 install -r requirements.txt # install requirements
+pip3 install git+https://github.com/aliutkus/speechmetrics#egg=speechmetrics[cpu]
 
 if ! [ -x "$(command -v unzip)" ]; then
   echo 'Error: unzip is not installed.' >&2
