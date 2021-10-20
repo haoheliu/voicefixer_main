@@ -21,7 +21,7 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
   
 ## Materials
 
-- Paper: [**paper.pdf**](https://github.com/haoheliu/voicefixer_main/blob/main/paper.pdf) (updating. Will be ready before Oct.06); Preprint on *arxiv*: https://arxiv.org/abs/2109.13731 (Slow to update) 
+- *Arxiv* preprint: https://arxiv.org/abs/2109.13731 
 - [Demo page](https://haoheliu.github.io/demopage-voicefixer/) contains comparison between single task speech restoration, general speech restoration, and voicefixer.
 - We wrote a [pip package](https://pypi.org/project/voicefixer) for voicefixer.
 - You can try voicefixer using your own voice on [colab](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing)!
