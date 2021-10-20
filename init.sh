@@ -1,8 +1,15 @@
-pip3 install --upgrade virtualenv==16.7.9 # this version virtualenv support the --no-site-packages option
-virtualenv --no-site-packages voicefixer # create new environment
-source voicefixer/bin/activate # activate environment
+if [ ! -d "/content/voicefixer_main" ]; then # colab
+  pip3 install --upgrade virtualenv==16.7.9 # this version virtualenv support the --no-site-packages option
+  virtualenv --no-site-packages voicefixer # create new environment
+  source voicefixer/bin/activate # activate environment
+fi
+
 pip3 install -r requirements.txt # install requirements
 pip3 install git+https://github.com/aliutkus/speechmetrics#egg=speechmetrics[cpu]
+pip3 install GitPython
+apt-get install libsox-fmt-all libsox-dev sox > /dev/null
+python3 -m pip install torchaudio > /dev/null
+python3 -m pip install git+https://github.com/facebookresearch/WavAugment.git > /dev/null
 
 if ! [ -x "$(command -v unzip)" ]; then
   echo 'Error: unzip is not installed.' >&2
