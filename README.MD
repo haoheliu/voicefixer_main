@@ -91,14 +91,14 @@ cd general_speech_restoration/voicefixer/unet
 ```
 For example, if you like to evaluate on all testset. 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  base \ 
                     -d  all_test_set 
 ```
 
 For example, if you just wanna evaluate on GSR testset. 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  general_speech_restoration \ 
                     -d  general_speech_restoration_eval 
 ```
@@ -114,7 +114,7 @@ There are generally seven testsets you can pass to **-t**:
 And if you would like to evaluate on a small portion of data, e.g. 10 utterance.
 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  base \ 
                     -d  only_ten_utterance_for_each_testset \ 
                     -l 10 
@@ -181,14 +181,14 @@ cd single_task_speech_restoration/declip/unet
 
 For example, if you like to evaluate on clipping testset. 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  clip \ 
                     -d  declipping_model_evaluation 
 ```
 
 If you like to evaluate on GSR testset. 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  general_speech_restoration \ 
                     -d  declipping_model_evaluation_with_GSR_testset 
 ```
@@ -204,7 +204,7 @@ There are generally seven testsets you can pass to **-t**:
 And if you would like to evaluate on a small portion of data, e.g. 10 utterance.
 
 ```shell script
-python3 handler.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
+python3 eval_gsr_voicefixer.py  -c  log/2021-09-30-xxx/version_0/checkpoints/epoch=1.ckpt \
                     -t  base \ 
                     -d  all_test_set \ 
                     -l 10 

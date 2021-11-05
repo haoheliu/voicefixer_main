@@ -29,7 +29,6 @@ WavAugment
 *.pkf
 *.lst
 *.pkl
-*.json
 *.mp3
 *.png
 *.jpg
