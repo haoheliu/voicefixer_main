@@ -4,10 +4,9 @@ import os
 
 git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
 sys.path.append(git_root)
-from general_speech_restoration.modules import *
+from models.components.modules import *
 
 from tools.pytorch.losses import *
-from tools.file.hdfs import *
 from tools.pytorch.pytorch_util import *
 
 class UNetResComplex_100Mb(nn.Module):

@@ -1,5 +1,4 @@
 import torch.nn as nn
-from inplace_abn import InPlaceABN
 import torch
 import torch.nn.functional as F
 import math
@@ -110,69 +109,15 @@ class DecoderBlock(nn.Module):
         return x
 
 
-class ConvBlockABNRes(nn.Module):
-    def __init__(self, in_channels, out_channels, size, activation, momentum):
-        super(ConvBlockABNRes, self).__init__()
-
-        self.activation = activation
-        if(type(size) == type((3,4))):
-            pad = size[0] // 2
-            size = size[0]
-        else:
-            pad = size // 2
-            size = size
-
-        self.conv1 = nn.Conv2d(in_channels=in_channels,
-                               out_channels=out_channels,
-                               kernel_size=(size, size), stride=(1, 1),
-                               dilation=(1, 1), padding=(pad, pad), bias=False)
-
-        self.bn1 = nn.BatchNorm2d(in_channels, momentum=momentum)
-        # self.abn1 = InPlaceABN(num_features=in_channels, momentum=momentum, activation='leaky_relu')
-
-        self.conv2 = nn.Conv2d(in_channels=out_channels,
-                               out_channels=out_channels,
-                               kernel_size=(size, size), stride=(1, 1),
-                               dilation=(1, 1), padding=(pad, pad), bias=False)
-
-        self.abn2 = InPlaceABN(num_features=out_channels, momentum=momentum, activation='leaky_relu')
-
-        if in_channels != out_channels:
-            self.shortcut = nn.Conv2d(in_channels=in_channels,
-                                      out_channels=out_channels, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
-            self.is_shortcut = True
-        else:
-            self.is_shortcut = False
-
-        self.init_weights()
-
-    def init_weights(self):
-        init_bn(self.bn1)
-        init_layer(self.conv1)
-        init_layer(self.conv2)
-
-        if self.is_shortcut:
-            init_layer(self.shortcut)
-
-    def forward(self, x):
-        origin = x
-        x = self.conv1(F.leaky_relu_(self.bn1(x), negative_slope=0.01))
-        x = self.conv2(self.abn2(x))
-
-        if self.is_shortcut:
-            return self.shortcut(origin) + x
-        else:
-            return origin + x
-
-class EncoderBlockABNRes4(nn.Module):
+class EncoderBlockRes1B(nn.Module):
     def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        super(EncoderBlockABNRes4, self).__init__()
-        size = 3
+        super(EncoderBlockRes1B, self).__init__()
+        size = (3,3)
 
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, size, activation, momentum)
-        self.conv_block2 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block1 = ConvBlockRes(in_channels, out_channels, size, activation, momentum)
+        self.conv_block2 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block3 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block4 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
         self.downsample = downsample
 
     def forward(self, x):
@@ -183,203 +128,21 @@ class EncoderBlockABNRes4(nn.Module):
         encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
         return encoder_pool, encoder
 
-
-class DecoderBlockABNRes4(nn.Module):
+class DecoderBlockRes1B(nn.Module):
     def __init__(self, in_channels, out_channels, stride, activation, momentum):
-        super(DecoderBlockABNRes4, self).__init__()
-        size = 3
-        self.activation = activation
-        self.stride = stride
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=(size, size), stride=stride,
-            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block5 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-
-    def init_weights(self):
-        init_layer(self.conv1)
-
-    def prune(self, x):
-        """Prune the shape of x after transpose convolution.
-        """
-        if self.stride == (1, 2):
-            x = x[:, :, 1 : -1, 0 : - 1]
-        else:
-            x = x[:, :, 0 : - 1, 0 : - 1]
-        return x
-
-    def forward(self, input_tensor, concat_tensor):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = self.prune(x)
-        # print(self.stride, x.shape, concat_tensor.shape)
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        x = self.conv_block3(x)
-        x = self.conv_block4(x)
-        x = self.conv_block5(x)
-        return x
-
-
-class EncoderBlockABNRes8(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        super(EncoderBlockABNRes8, self).__init__()
-        size = 3
-
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, size, activation, momentum)
-        self.conv_block2 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block5 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block6 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block7 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block8 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder = self.conv_block2(encoder)
-        encoder = self.conv_block3(encoder)
-        encoder = self.conv_block4(encoder)
-        encoder = self.conv_block5(encoder)
-        encoder = self.conv_block6(encoder)
-        encoder = self.conv_block7(encoder)
-        encoder = self.conv_block8(encoder)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-
-class DecoderBlockABNRes8(nn.Module):
-    def __init__(self, in_channels, out_channels, stride, activation, momentum):
-        super(DecoderBlockABNRes8, self).__init__()
-        size = 3
-        self.activation = activation
-        self.stride = stride
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=(size, size), stride=stride,
-            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block5 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block6 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block7 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block8 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-
-    def init_weights(self):
-        init_layer(self.conv1)
-
-    def prune(self, x):
-        """Prune the shape of x after transpose convolution.
-        """
-        if self.stride == (1, 2):
-            x = x[:, :, 1 : -1, 0 : - 1]
-        else:
-            x = x[:, :, 0 : - 1, 0 : - 1]
-        return x
-
-    def forward(self, input_tensor, concat_tensor):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = self.prune(x)
-        # print(self.stride, x.shape, concat_tensor.shape)
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        x = self.conv_block3(x)
-        x = self.conv_block4(x)
-        x = self.conv_block5(x)
-        x = self.conv_block6(x)
-        x = self.conv_block7(x)
-        x = self.conv_block8(x)
-        return x
-
-class EncoderBlockABNRes2(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        super(EncoderBlockABNRes2, self).__init__()
-        size = 3
-
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, size, activation, momentum)
-        self.conv_block2 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder = self.conv_block2(encoder)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-class DecoderBlockABNRes2(nn.Module):
-    def __init__(self, in_channels, out_channels, stride, activation, momentum):
-        super(DecoderBlockABNRes2, self).__init__()
-        size = 3
+        super(DecoderBlockRes1B, self).__init__()
+        size = (3,3)
         self.activation = activation
 
         self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=(size, size), stride=stride,
-            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=(1, 1))
+            out_channels=out_channels, kernel_size=size, stride=stride,
+            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=1)
 
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-
-    def init_weights(self):
-        init_layer(self.conv1)
-
-    def prune(self, x, both=False):
-        """Prune the shape of x after transpose convolution.
-        """
-        if(both): x = x[:, :, 0 : - 1, 0:-1]
-        else: x = x[:, :, 0: - 1, :]
-        return x
-
-    def forward(self, input_tensor, concat_tensor,both=False):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = self.prune(x,both=both)
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        x = self.conv_block3(x)
-        return x
-
-class EncoderBlockABNRes(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        super(EncoderBlockABNRes, self).__init__()
-        size = 3
-
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, size, activation, momentum)
-        self.conv_block2 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder = self.conv_block2(encoder)
-        encoder = self.conv_block3(encoder)
-        encoder = self.conv_block4(encoder)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-class DecoderBlockABNRes(nn.Module):
-    def __init__(self, in_channels, out_channels, stride, activation, momentum):
-        super(DecoderBlockABNRes, self).__init__()
-        size = 3
-        self.activation = activation
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=(size, size), stride=stride,
-            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block5 = ConvBlockABNRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block2 = ConvBlockRes(out_channels * 2, out_channels, size, activation, momentum)
+        self.conv_block3 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block4 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
+        self.conv_block5 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
 
     def init_weights(self):
         init_layer(self.conv1)
@@ -400,7 +163,6 @@ class DecoderBlockABNRes(nn.Module):
         x = self.conv_block4(x)
         x = self.conv_block5(x)
         return x
-
 
 class EncoderBlockRes4B(nn.Module):
     def __init__(self, in_channels, out_channels, downsample, activation, momentum):
@@ -508,185 +270,7 @@ class ConvBlockRes(nn.Module):
         else:
             return origin + x
 
-class EncoderBlockResInplace1B(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, downsample, activation, momentum):
-        r"""Encoder block, contains 8 convolutional layers.
-        """
-        super(EncoderBlockResInplace1B, self).__init__()
 
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, kernel_size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-
-class DecoderBlockResInplace1B(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, upsample, activation, momentum):
-        r"""Decoder block, contains 1 transpose convolutional and 8 convolutional layers."""
-        super(DecoderBlockResInplace1B, self).__init__()
-        self.kernel_size = kernel_size
-        self.stride = upsample
-        self.activation = activation
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=self.stride, stride=self.stride,
-            padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, kernel_size, activation, momentum)
-
-    def init_weights(self):
-        init_bn(self.bn1)
-        init_layer(self.conv1)
-
-    def forward(self, input_tensor, concat_tensor):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        return x
-
-class EncoderBlockResInplace4B(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum, kernel_size=3):
-        r"""Encoder block, contains 8 convolutional layers.
-        """
-        super(EncoderBlockResInplace4B, self).__init__()
-
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, kernel_size, activation, momentum)
-        self.conv_block2 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder = self.conv_block2(encoder)
-        encoder = self.conv_block3(encoder)
-        encoder = self.conv_block4(encoder)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-
-class DecoderBlockResInplace4B(nn.Module):
-    def __init__(self, in_channels, out_channels, upsample, activation, momentum, kernel_size=3):
-        r"""Decoder block, contains 1 transpose convolutional and 8 convolutional layers."""
-        super(DecoderBlockResInplace4B, self).__init__()
-        self.kernel_size = kernel_size
-        self.stride = upsample
-        self.activation = activation
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=self.stride, stride=self.stride,
-            padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, kernel_size, activation, momentum)
-        self.conv_block3 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-        self.conv_block4 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-        self.conv_block5 = ConvBlockABNRes(out_channels, out_channels, kernel_size, activation, momentum)
-
-    def init_weights(self):
-        init_bn(self.bn1)
-        init_layer(self.conv1)
-
-    def forward(self, input_tensor, concat_tensor):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        x = self.conv_block3(x)
-        x = self.conv_block4(x)
-        x = self.conv_block5(x)
-        return x
-
-
-
-
-class EncoderBlockABNRes1(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        super(EncoderBlockABNRes1, self).__init__()
-        size = 3
-
-        self.conv_block1 = ConvBlockABNRes(in_channels, out_channels, size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-class DecoderBlockABNRes1(nn.Module):
-    def __init__(self, in_channels, out_channels, stride, activation, momentum):
-        super(DecoderBlockABNRes1, self).__init__()
-        size = 3
-        self.activation = activation
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=(size, size), stride=stride,
-            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockABNRes(out_channels * 2, out_channels, size, activation, momentum)
-
-    def init_weights(self):
-        init_layer(self.conv1)
-
-    def prune(self, x, both=False):
-        """Prune the shape of x after transpose convolution.
-        """
-        if(both): x = x[:, :, 0 : - 1, 0:-1]
-        else: x = x[:, :, 0: - 1, :]
-        return x
-
-    def forward(self, input_tensor, concat_tensor,both=False):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = self.prune(x,both=both)
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        return x
-
-
-
-class EncoderBlockRes1B(nn.Module):
-    def __init__(self, in_channels, out_channels, downsample, activation, momentum):
-        r"""Encoder block, contains 8 convolutional layers.
-        """
-        super(EncoderBlockRes1B, self).__init__()
-        kernel_size = 3
-        self.conv_block1 = ConvBlockRes(in_channels, out_channels, kernel_size, activation, momentum)
-        self.downsample = downsample
-
-    def forward(self, x):
-        encoder = self.conv_block1(x)
-        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
-        return encoder_pool, encoder
-
-
-class DecoderBlockRes1B(nn.Module):
-    def __init__(self, in_channels, out_channels, upsample, activation, momentum):
-        r"""Decoder block, contains 1 transpose convolutional and 8 convolutional layers."""
-        super(DecoderBlockRes1B, self).__init__()
-        self.kernel_size = 3
-        self.stride = upsample
-        self.activation = activation
-
-        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
-            out_channels=out_channels, kernel_size=self.stride, stride=self.stride,
-            padding=(0, 0), bias=False, dilation=(1, 1))
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv_block2 = ConvBlockRes(out_channels * 2, out_channels, 3, activation, momentum)
-
-    def init_weights(self):
-        init_bn(self.bn1)
-        init_layer(self.conv1)
-
-    def forward(self, input_tensor, concat_tensor):
-        x = self.conv1(F.relu_(self.bn1(input_tensor)))
-        x = torch.cat((x, concat_tensor), dim=1)
-        x = self.conv_block2(x)
-        return x
 
 
 def init_layer(layer):

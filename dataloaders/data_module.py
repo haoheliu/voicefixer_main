@@ -79,9 +79,8 @@ class SrRandSampleRate(pl.LightningDataModule):
         self.train_loader = "FixLengthAugRandomDataLoader"
         datasets = []
         for k in hp["data"]["val_dataset"].keys():
-            datasets.append(k)
+            datasets+=list(hp["data"]["val_dataset"][k].keys())
         self.val_datasets = list(set(datasets))
-
     def setup(self, stage = None):
         if(stage == 'fit' or stage is None):
             self.train = eval(self.train_loader)(frame_length=self.hp["train"]["input_segment_length"],

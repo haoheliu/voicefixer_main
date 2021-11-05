@@ -8,10 +8,8 @@ from tools.file.wav import *
 from models.gsr_unet import ResUNet as Model
 
 from tools.pytorch.pytorch_util import *
-from tools.file.hdfs import *
 import librosa
 import librosa.display
-from tools.file.hdfs import hdfs_get
 from tools.pytorch.pytorch_util import to_log
 from evaluation import Config
 from evaluation import evaluation

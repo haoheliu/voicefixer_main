@@ -43,35 +43,35 @@ class UNetResComplex_100Mb(nn.Module):
             freeze_parameters=freeze_parameters,
         )
 
-        self.encoder_block1 = EncoderBlockABNRes(in_channels=channels * nsrc, out_channels=32,
+        self.encoder_block1 = EncoderBlockRes4B(in_channels=channels * nsrc, out_channels=32,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.encoder_block2 = EncoderBlockABNRes(in_channels=32, out_channels=64,
+        self.encoder_block2 = EncoderBlockRes4B(in_channels=32, out_channels=64,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.encoder_block3 = EncoderBlockABNRes(in_channels=64, out_channels=128,
+        self.encoder_block3 = EncoderBlockRes4B(in_channels=64, out_channels=128,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.encoder_block4 = EncoderBlockABNRes(in_channels=128, out_channels=256,
+        self.encoder_block4 = EncoderBlockRes4B(in_channels=128, out_channels=256,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.encoder_block5 = EncoderBlockABNRes(in_channels=256, out_channels=384,
+        self.encoder_block5 = EncoderBlockRes4B(in_channels=256, out_channels=384,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.encoder_block6 = EncoderBlockABNRes(in_channels=384, out_channels=384,
+        self.encoder_block6 = EncoderBlockRes4B(in_channels=384, out_channels=384,
                                                  downsample=(2, 2), activation=activation, momentum=momentum)
-        self.conv_block7 = ConvBlockABNRes(in_channels=384, out_channels=384,
-                                           size=3, activation=activation, momentum=momentum)
-        self.decoder_block1 = DecoderBlockABNRes(in_channels=384, out_channels=384,
+        self.conv_block7 = ConvBlockRes(in_channels=384, out_channels=384,
+                                        kernel_size=(3, 3), activation=activation, momentum=momentum)
+        self.decoder_block1 = DecoderBlockRes4B(in_channels=384, out_channels=384,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
-        self.decoder_block2 = DecoderBlockABNRes(in_channels=384, out_channels=384,
+        self.decoder_block2 = DecoderBlockRes4B(in_channels=384, out_channels=384,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
-        self.decoder_block3 = DecoderBlockABNRes(in_channels=384, out_channels=256,
+        self.decoder_block3 = DecoderBlockRes4B(in_channels=384, out_channels=256,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
-        self.decoder_block4 = DecoderBlockABNRes(in_channels=256, out_channels=128,
+        self.decoder_block4 = DecoderBlockRes4B(in_channels=256, out_channels=128,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
-        self.decoder_block5 = DecoderBlockABNRes(in_channels=128, out_channels=64,
+        self.decoder_block5 = DecoderBlockRes4B(in_channels=128, out_channels=64,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
-        self.decoder_block6 = DecoderBlockABNRes(in_channels=64, out_channels=32,
+        self.decoder_block6 = DecoderBlockRes4B(in_channels=64, out_channels=32,
                                                  stride=(2, 2), activation=activation, momentum=momentum)
 
-        self.after_conv_block1 = ConvBlockABNRes(in_channels=32, out_channels=32,
-                                                 size=3, activation=activation, momentum=momentum)
+        self.after_conv_block1 = ConvBlockRes(in_channels=32, out_channels=32,
+                                                 kernel_size=(3,3), activation=activation, momentum=momentum)
 
         self.after_conv2 = nn.Conv2d(in_channels=32, out_channels=1,
                                      kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True)

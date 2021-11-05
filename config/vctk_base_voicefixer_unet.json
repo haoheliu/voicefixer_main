@@ -36,7 +36,7 @@
     "resume_from_checkpoint": "",
     "check_val_every_n_epoch": 2,
     "seed": 1234,
-    "num_works": 12,
+    "num_works": 0,
     "max_epoches": 5000,
     "hours_of_data_for_an_epoch": 500,
     "learning_rate": 0.0005,
@@ -44,27 +44,27 @@
     "input_segment_length": 3.0,
     "betas": [0.8, 0.99],
     "eps": 1e-9,
-    "batch_size": 40,
+    "batch_size": 4,
     "warmup_steps": 1000,
     "reduce_lr_every_n_steps":40000,
-    "save_top_k": 5
+    "save_top_k": -1
   },
   "data": {
     "source_types": ["vocals","noise"],
     "train_dataset":{
         "vocals":{
-            "vctk": "voicefixer_main/dataIndex/vctk/train/speech.lst"
+            "vctk": "dataIndex/vctk/train/speech.lst"
         },
         "noise": {
-            "vd_noise": "voicefixer_main/dataIndex/vd_noise/vd_noise.lst"
+            "vd_noise": "dataIndex/vd_noise/vd_noise.lst"
         }
     },
     "val_dataset":{
         "vocals": {
-            "gsr": "voicefixer_main/datasets/se/TestSets/ALL_GSR/target.lst"
+            "gsr": "datasets/se/TestSets/ALL_GSR/target.lst"
         },
         "noisy": {
-            "gsr": "voicefixer_main/datasets/se/TestSets/ALL_GSR/simulated.lst"
+            "gsr": "datasets/se/TestSets/ALL_GSR/simulated.lst"
         }
     },
     "max_wav_value": 1.0,
@@ -83,7 +83,7 @@
     "source": "vocals",
     "effects": ["low_pass", "clip", "reverb_rir"],
     "params": {
-        "rir_root": "voicefixer_main/datasets/se/RIR_44k/train",
+        "rir_root": "datasets/se/RIR_44k/train",
         "scale": {
           "prob": [1,0],
           "scale_range": [0.3, 1.0]

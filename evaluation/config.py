@@ -9,7 +9,6 @@ from os.path import join,exists
 from os import listdir, makedirs
 from tools.file.wav import *
 from tools.file.io import write_list, read_list
-from tools.file.hdfs import *
 
 class Config:
 
@@ -35,8 +34,6 @@ class Config:
     # TEST_ROOT = "/Volumes/Haohe_SSD/TestSets_bak"
     TEST_ROOT = os.path.join(r, "voicefixer_main/datasets/se/TestSets")
     EVAL_RESULT = os.path.join(r, "voicefixer_main/exp_results")
-    HDFS_RESULT_ROOT = "hdfs://haruna/home/byte_speech_sv/user/liuhaohe/exps2/iclr_exps"
-    HDFS_ROOT = "hdfs://haruna/home/byte_speech_sv/user/liuhaohe/exps2"
 
     makedirs(EVAL_RESULT,exist_ok=True)
 

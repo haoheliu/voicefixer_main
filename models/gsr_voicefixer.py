@@ -1,5 +1,5 @@
 import torch.utils
-from torchaudio.transforms import MelScale
+from tools.pytorch.mel_scale import MelScale
 import torch.utils.data
 from voicefixer import Vocoder
 from tools.callbacks.base import *
@@ -45,13 +45,13 @@ class Generator(nn.Module):
     def __init__(self,hp,channels):
         super(Generator, self).__init__()
         self.hp = hp
-        if(self.hp["gsr"]["voicefixer"]["unet"]):
+        if(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["unet"]):
             from models.components.unet import UNetResComplex_100Mb
             self.analysis_module = UNetResComplex_100Mb(channels=channels)
-        elif(self.hp["gsr"]["voicefixer"]["unet_small"]):
+        elif(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["unet_small"]):
             from models.components.unet_small import UNetResComplex_100Mb
             self.analysis_module = UNetResComplex_100Mb(channels=channels)
-        elif(self.hp["gsr"]["voicefixer"]["bi_gru"]):
+        elif(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["bi_gru"]):
             n_mel = hp["model"]["mel_freq_bins"]
             self.analysis_module = nn.Sequential(
                     nn.BatchNorm2d(1),
@@ -62,7 +62,7 @@ class Generator(nn.Module):
                     nn.ReLU(),
                     nn.Linear(n_mel*2, n_mel),
                 )
-        elif(self.hp["gsr"]["voicefixer"]["dnn"]):
+        elif(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["dnn"]):
             n_mel = hp["model"]["mel_freq_bins"]
             self.analysis_module = nn.Sequential(
                     nn.Linear(n_mel, n_mel * 2),
@@ -178,7 +178,7 @@ class VoiceFixer(pl.LightningModule):
         mel_orig = self.mel(sp.permute(0,1,3,2)).permute(0,1,3,2)
         return sp, mel_orig
 
-    def forward(self, sp, mel_orig):
+    def forward(self, mel_orig):
         """
         Args:
           input: (batch_size, channels_num, segment_samples)
@@ -188,18 +188,18 @@ class VoiceFixer(pl.LightningModule):
             'wav': (batch_size, channels_num, segment_samples),
             'sp': (batch_size, channels_num, time_steps, freq_bins)}
         """
-        return self.generator(sp, mel_orig)
+        return self.generator(mel_orig)
 
     def configure_optimizers(self):
         optimizer_g = torch.optim.Adam([{'params': self.generator.parameters()}],
-                                       lr=self.lr, amsgrad=True, betas=(0.5, 0.999))
+                                       lr=self.lr, amsgrad=True, betas=(self.hp["train"]["betas"][0], self.hp["train"]["betas"][1]))
 
         scheduler_g = {
             'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer_g, self.lr_lambda),
             'interval': 'epoch',
             'frequency': 1,
         }
-        return optimizer_g, scheduler_g
+        return ([optimizer_g], [scheduler_g])
 
     def preprocess(self, batch, train=False, cutoff=None):
         if(train):
@@ -236,16 +236,21 @@ class VoiceFixer(pl.LightningModule):
 
     def training_step(self, batch, batch_nb, optimizer_idx):
 
-        self.vocal, self.augLR, _, self.LR_noisy = self.preprocess(batch, train=True)
+        self.vocal, _, _, self.low_quality = self.preprocess(batch, train=True)
 
-        # for i in range(self.vocal.size()[0]):
-        #     save_wave(tensor2numpy(self.vocal[i, ...]), str(i) + "vocal" + ".wav", sample_rate=44100)
-        #     save_wave(tensor2numpy(self.LR_noisy[i, ...]), str(i) + "LR_noisy" + ".wav", sample_rate=44100)
+        # inspect the training data
+        if(self.hp["task"]["inspect_training_data"] and self.train_step < 10):
+            sample_training_data_save_path = os.path.join(self.hp.model_dir,"training_data_sample")
+            if(not os.path.exists(sample_training_data_save_path)):
+                os.makedirs(sample_training_data_save_path, exist_ok=True)
+            for i in range(self.vocal.size()[0]):
+                save_wave(tensor2numpy(self.vocal[i, ...]), os.path.join(sample_training_data_save_path, str(i) + "vocal.wav"), sample_rate=44100)
+                save_wave(tensor2numpy(self.low_quality[i, ...]), os.path.join(sample_training_data_save_path, str(i) + "low_quality.wav"), sample_rate=44100)
 
         _, self.mel_target = self.pre(self.vocal)
-        self.sp_LR_target_noisy, self.mel_LR_target_noisy = self.pre(self.LR_noisy)
+        _, self.mel_low_quality = self.pre(self.low_quality)
 
-        self.generated = self(self.sp_LR_target_noisy, self.mel_LR_target_noisy)
+        self.generated = self(self.mel_low_quality)
 
         targ_loss = self.l1loss(self.generated['mel'], to_log(self.mel_target))
 
@@ -253,3 +258,7 @@ class VoiceFixer(pl.LightningModule):
         loss = targ_loss
         self.train_step += 1.0
         return {"loss": loss}
+
+
+    def validation_step(self):
+        pass

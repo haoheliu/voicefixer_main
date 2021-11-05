@@ -9,15 +9,15 @@ def get_hparams(init=True):
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', type=str, default="./configs/base.json",
                         help='JSON file for configuration')
-    parser.add_argument('-m', '--model', type=str, required=True,
-                        help='Model name')
-
+    # parser.add_argument('-m', '--model', type=str, required=True,
+    #                     help='Model name')
     args = parser.parse_args()
-    model_dir = os.path.join("./logs", args.model)
+
+    exp_name = os.path.splitext(os.path.basename(args.config))[0]
+    model_dir = os.path.join("./logs", exp_name)
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
-
     config_path = args.config
     config_save_path = os.path.join(model_dir, "config.json")
     if init:
@@ -32,7 +32,7 @@ def get_hparams(init=True):
 
     hparams = HParams(**config)
     hparams.model_dir = model_dir
-    return hparams
+    return hparams, parser
 
 
 def get_hparams_from_dir(model_dir):

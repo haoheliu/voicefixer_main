@@ -1,5 +1,5 @@
 import torch.utils
-from torchaudio.transforms import MelScale
+from tools.pytorch.mel_scale import MelScale
 import torch.utils.data
 from tools.callbacks.base import *
 from tools.pytorch.losses import *

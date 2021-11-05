@@ -13,7 +13,6 @@ from math import ceil
 # from general_speech_restoration.all_stft_hard_only.unet.handler import refresh_model
 import logging
 import random
-from tools.file.hdfs import *
 from tools.file.io import *
 from pynvml import nvmlInit
 import glob
