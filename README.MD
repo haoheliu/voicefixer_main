@@ -15,7 +15,7 @@ VoiceFixer is a framework for general speech restoration. We aim at the restorat
 
 ## Usage
 
-### Environment (Required)
+### Environment (Do this at first)
 ```shell script
 # Download dataset and prepare running environment
 git clone https://github.com/haoheliu/voicefixer_main.git
@@ -29,7 +29,7 @@ source init.sh
 - Training
 ```shell
 # pass in a configuration file to the training script
-python3 train_gsr_voicefixer.py -c config/vctk_base_voicefixer_unet.json
+python3 train_gsr_voicefixer.py -c config/vctk_base_voicefixer_unet.json # you can modify the configuration file to personalize your training
 ```
 You can checkout the *logs* directory for checkpoints, logging and validation results.
 
