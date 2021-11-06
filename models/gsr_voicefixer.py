@@ -81,6 +81,8 @@ class Generator(nn.Module):
                     nn.ReLU(),
                     nn.Linear(n_mel * 2, n_mel),
                 )
+        else:
+            pass # todo warning
     def forward(self, mel_orig):
         out = self.analysis_module(to_log(mel_orig))
         if(type(out) == type({})):
@@ -196,7 +198,7 @@ class VoiceFixer(pl.LightningModule):
 
         scheduler_g = {
             'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer_g, self.lr_lambda),
-            'interval': 'epoch',
+            'interval': 'step',
             'frequency': 1,
         }
         return ([optimizer_g], [scheduler_g])
