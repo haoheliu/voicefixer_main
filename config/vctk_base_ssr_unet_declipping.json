@@ -5,7 +5,7 @@
       "gsr_model": {
         "unet": false,
         "voicefixer": {
-          "unet": true,
+          "unet": false,
           "unet_small": false,
           "bi_gru": false,
           "dnn": false
@@ -15,12 +15,12 @@
     "ssr":{
       "ssr_task": {
         "dereverberation": false,
-        "denoising": false,
+        "denoising": true,
         "declipping": false,
         "super_resolution": false
       },
       "ssr_model": {
-        "unet": false
+        "unet": true
       }
     }
   },
@@ -33,7 +33,7 @@
     "resume_from_checkpoint": "",
     "check_val_every_n_epoch": 2,
     "seed": 1234,
-    "num_works": 38,
+    "num_works": 2,
     "max_epoches": 5000,
     "hours_of_data_for_an_epoch": 300,
     "learning_rate": 0.0005,
@@ -41,7 +41,7 @@
     "input_segment_length": 3.0,
     "betas": [0.5, 0.999],
     "eps": 1e-9,
-    "batch_size": 24,
+    "batch_size": 2,
     "warmup_steps": 100,
     "reduce_lr_every_n_steps":40000,
     "save_top_k": -1
@@ -78,7 +78,7 @@
   },
   "augment": {
     "source": "vocals",
-    "effects": ["low_pass", "clip", "reverb_rir"],
+    "effects": ["clip"],
     "params": {
         "rir_root": "datasets/se/RIR_44k/train",
         "scale": {
@@ -87,8 +87,15 @@
         },
         "noise": {
           "prob": [1.0],
-          "snr_range": [-5,40]
+          "snr_range": [128,128]
         },
+       "low_pass_2": {
+            "prob": [1.0],
+            "low_pass_range": [44100, 44100],
+            "filter_order_range": [2,10],
+            "filter_type": ["cheby1", "ellip", "bessel", "stft_hard", "stft", "butter"]
+        },
+
         "fade": {
             "prob": [0.1],
             "fade_in_portion": [0.1, 0.3],
@@ -114,25 +121,19 @@
             "room_size": [0, 100]
         },
         "reverb_rir": {
-            "prob": [0.30],
+            "prob": [1.0],
             "rir_file_name": ""
         },
         "low_pass_1": {
             "prob": [0.25],
             "low_pass_range": [4000, 22000]
         },
-       "low_pass_2": {
-            "prob": [1.0],
-            "low_pass_range": [1500, 44100],
-            "filter_order_range": [2,10],
-            "filter_type": ["cheby1", "ellip", "bessel", "stft_hard", "stft", "butter"]
-        },
         "high_pass": {
             "prob": [0.25],
             "high_pass_range": [500, 2000]
         },
         "clip": {
-            "prob": [0.20],
+            "prob": [1.0],
             "louder_time": [1.0, 11.0]
         },
         "time_dropout": {

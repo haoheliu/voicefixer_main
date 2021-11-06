@@ -11,7 +11,7 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 import speechmetrics as sm
 from tools.pytorch.mel_scale import MelScale
-from evaluation import *
+from evaluation_proc.utils import *
 
 EPS = 1e-8
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     print(au.metrics(a,a+1e-9,rate=44100))
 
 
-    # res = au.evaluation(est="/Users/admin/Downloads/test_sample_result_test_0_orig.wav",
+    # res = au.evaluation_proc(est="/Users/admin/Downloads/test_sample_result_test_0_orig.wav",
     #     target="/Users/admin/Downloads/test_sample_result_test_0_orig.wav")
     # print(res)
 

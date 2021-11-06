@@ -4,6 +4,71 @@ import sys
 import argparse
 import logging
 import json
+from tools.pytorch.pytorch_util import tensor2numpy
+import torch
+import matplotlib.pyplot as plt
+import numpy as np
+import librosa
+import librosa.display
+import matplotlib.cm as cm
+
+EPS=1e-9
+
+def draw_and_save(mel: torch.Tensor, clip_max=None, clip_min=None, needlog=True):
+    plt.figure(figsize=(15, 5))
+    mel = np.transpose(tensor2numpy(mel)[0, 0, ...], (1, 0))
+    # assert np.sum(mel < 0) == 0, str(np.sum(mel < 0)) + str(np.sum(mel < 0))
+
+    if (needlog):
+        mel_log = np.log10(mel + EPS)
+    else:
+        mel_log = mel
+
+    # plt.imshow(mel)
+    librosa.display.specshow(mel_log, sr=44100, x_axis='frames', y_axis='mel', cmap=cm.jet, vmax=clip_max,
+                             vmin=clip_min)
+    plt.colorbar()
+    plt.show()
+
+def load_wav_energy(path, sample_rate, threshold=0.95):
+    wav_10k, _ = librosa.load(path, sr=sample_rate)
+    stft = np.log10(np.abs(librosa.stft(wav_10k))+1.0)
+    fbins = stft.shape[0]
+    e_stft = np.sum(stft, axis=1)
+    for i in range(e_stft.shape[0]):
+        e_stft[-i-1] = np.sum(e_stft[:-i-1])
+    total = e_stft[-1]
+    for i in range(e_stft.shape[0]):
+        if(e_stft[i] < total*threshold):continue
+        else: break
+    return wav_10k, int((sample_rate//2) * (i/fbins))
+
+def load_wav(path, sample_rate, threshold=0.95):
+    wav_10k, _ = librosa.load(path, sr=sample_rate)
+    return wav_10k
+
+def amp_to_original_f(mel_sp_est, mel_sp_target, cutoff=0.2):
+    freq_dim = mel_sp_target.size()[-1]
+    mel_sp_est_low, mel_sp_target_low = mel_sp_est[..., 5:int(freq_dim * cutoff)], mel_sp_target[..., 5:int(freq_dim * cutoff)]
+    energy_est, energy_target = torch.mean(mel_sp_est_low, dim=(2, 3)), torch.mean(mel_sp_target_low, dim=(2, 3))
+    amp_ratio = energy_target / energy_est
+    return mel_sp_est * amp_ratio[..., None, None], mel_sp_target
+
+def trim_center(est, ref):
+    diff = np.abs(est.shape[-1] - ref.shape[-1])
+    if (est.shape[-1] == ref.shape[-1]):
+        return est, ref
+    elif (est.shape[-1] > ref.shape[-1]):
+        min_len = min(est.shape[-1], ref.shape[-1])
+        est, ref = est[..., int(diff // 2):-int(diff // 2)], ref
+        est, ref = est[..., :min_len], ref[..., :min_len]
+        return est, ref
+    else:
+        min_len = min(est.shape[-1], ref.shape[-1])
+        est, ref = est, ref[..., int(diff // 2):-int(diff // 2)]
+        est, ref = est[..., :min_len], ref[..., :min_len]
+        return est, ref
+
 
 def get_hparams(init=True):
     parser = argparse.ArgumentParser()
@@ -23,8 +88,8 @@ def get_hparams(init=True):
     if init:
         with open(config_path, "r") as f:
             data = f.read()
-        with open(config_save_path, "w") as f:
-            f.write(data)
+        # with open(config_save_path, "w") as f:
+        #     f.write(data)
     else:
         with open(config_save_path, "r") as f:
             data = f.read()

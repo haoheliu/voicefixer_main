@@ -3,9 +3,9 @@
     "inspect_training_data": false,
     "gsr": {
       "gsr_model": {
-        "unet": false,
+        "unet": true,
         "voicefixer": {
-          "unet": true,
+          "unet": false,
           "unet_small": false,
           "bi_gru": false,
           "dnn": false
@@ -33,7 +33,7 @@
     "resume_from_checkpoint": "",
     "check_val_every_n_epoch": 2,
     "seed": 1234,
-    "num_works": 38,
+    "num_works": 20,
     "max_epoches": 5000,
     "hours_of_data_for_an_epoch": 300,
     "learning_rate": 0.0005,
@@ -41,7 +41,7 @@
     "input_segment_length": 3.0,
     "betas": [0.5, 0.999],
     "eps": 1e-9,
-    "batch_size": 24,
+    "batch_size": 2,
     "warmup_steps": 100,
     "reduce_lr_every_n_steps":40000,
     "save_top_k": -1

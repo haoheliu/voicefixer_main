@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 from tools.file.hdfs import hdfs_get
 from tools.pytorch.pytorch_util import from_log, to_log
 from matplotlib import cm
-from evaluation import Config
-from evaluation import evaluation
-from evaluation import AudioMetrics
+from evaluation_proc import Config
+from evaluation_proc import evaluation
+from evaluation_proc import AudioMetrics
 
 EPS=1e-8
 

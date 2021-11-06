@@ -13,9 +13,8 @@ from pytorch_lightning.callbacks.progress import TQDMProgressBar
 from dataloaders.data_module import SrRandSampleRate
 from tools.callbacks.base import *
 from tools.callbacks.verbose import *
-# from argdoc import generate_doc
+
 import tools.utils
-from argparse import ArgumentParser
 from tools.dsp.lowpass import *
 from models.gsr_voicefixer import VoiceFixer
 
@@ -37,11 +36,6 @@ for k in hp["data"]["val_dataset"].keys():
 
 hp["augment"]["params"]["rir_root"] = os.path.join(hp["root"], hp["augment"]["params"]["rir_root"])
 
-# if (os.path.exists("temp_path.json")):
-#     os.remove("temp_path.json")
-# if (os.path.exists("path.json")):
-#     os.remove("path.json")
-
 parser = pl.Trainer.add_argparse_args(parser)
 args = parser.parse_args()
 
@@ -52,25 +46,26 @@ distributed = True if (gpu_nums > 1) else False
 
 logger = TensorBoardLogger(os.path.dirname(hp.model_dir), name=os.path.basename(hp.model_dir))
 
+hp["log_dir"] = logger.log_dir
+
 model = VoiceFixer(hp, channels=1, type_target="vocals")
 # print(model)
 dm = SrRandSampleRate(hp, distributed)
 
 callbacks = []
+checkpoint_callback = ModelCheckpoint(
+                      filename='{epoch}-{step}-{val_l:.2f}',
+                      dirpath=os.path.join(logger.log_dir,"checkpoints"),
+                      save_top_k=hp["train"]["save_top_k"]
+                      # mode='min'
+                  )
 callbacks.extend([
                   LearningRateMonitor(logging_interval='step'),
-                  ModelCheckpoint(
-                      filename='{epoch}',
-                      save_top_k=hp["train"]["save_top_k"],
-                      mode='min',
-                  ),
+                  checkpoint_callback,
                   initLogDir(hp, current_dir=os.getcwd()),
                   TQDMProgressBar(refresh_rate=hp["log"]["progress_bar_refresh_rate"])
                   ]
                  )
-
-# print("eval_callbacks: ")
-# for each in callbacks: print(each)
 
 trainer = Trainer.from_argparse_args(args,
                                      gpus=gpu_nums,
@@ -83,7 +78,6 @@ trainer = Trainer.from_argparse_args(args,
                                      sync_batchnorm=True,
                                      replace_sampler_ddp=False,
                                      check_val_every_n_epoch=hp["train"]["check_val_every_n_epoch"],
-                                     # checkpoint_callback=True,
                                      logger=logger,
                                      log_every_n_steps=hp["log"]["log_every_n_steps"])
 dm.setup('fit')

@@ -8,7 +8,7 @@ from tools.pytorch.pytorch_util import *
 from tools.pytorch.random_ import *
 from tools.file.wav import *
 from dataloaders.augmentation.base import add_noise_and_scale_with_HQ_with_Aug
-
+from tools.utils import trim_center
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class BN_GRU(torch.nn.Module):
@@ -199,7 +199,7 @@ class VoiceFixer(pl.LightningModule):
         scheduler_g = {
             'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer_g, self.lr_lambda),
             'interval': 'step',
-            'frequency': 1,
+            'frequency': 1
         }
         return ([optimizer_g], [scheduler_g])
 
@@ -223,11 +223,10 @@ class VoiceFixer(pl.LightningModule):
             return vocal, augLR, LR,  noise + augLR
         else:
             if(cutoff is None):
-                LR_noisy = batch["noisy"]
-                LR = batch["vocals"]
+                low_quality = batch["noisy"]
                 vocals = batch["vocals"]
-                vocals, LR, LR_noisy = vocals.float().permute(0, 2, 1), LR.float().permute(0, 2, 1), LR_noisy.float().permute(0, 2, 1)
-                return vocals, LR, LR_noisy, batch['fname'][0]
+                vocals, LR_noisy = vocals.float().permute(0, 2, 1), low_quality.float().permute(0, 2, 1)
+                return vocals, vocals, LR_noisy, batch['fname'][0]
             else:
                 LR_noisy = batch["noisy"+"LR"+"_"+str(cutoff)]
                 LR = batch["vocals" + "LR" + "_" + str(cutoff)]
@@ -256,11 +255,23 @@ class VoiceFixer(pl.LightningModule):
 
         targ_loss = self.l1loss(self.generated['mel'], to_log(self.mel_target))
 
-        self.log("targ-l", targ_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
+        self.log("targ_l", targ_loss, on_step=True, on_epoch=False, logger=True, sync_dist=True, prog_bar=True)
         loss = targ_loss
         self.train_step += 1.0
         return {"loss": loss}
 
-    #
-    # def validation_step(self):
-    #     pass
+
+    def validation_step(self, batch, batch_idx):
+        vocal, _, low_quality, fname  = self.preprocess(batch, train=False)
+        _, mel_target = self.pre(vocal)
+        _, mel_low_quality = self.pre(low_quality)
+        estimation = self(mel_low_quality)['mel']
+        val_loss = self.l1loss(estimation, to_log(mel_target))
+        self.log("val_l", val_loss, on_step=False, on_epoch=True, logger=True, sync_dist=True, prog_bar=True, batch_size=1)
+        if(batch_idx < 5):
+            out = self.vocoder(from_log(estimation))
+            if(torch.max(torch.abs(out)) > 1.0):
+                out = out / torch.max(torch.abs(out))
+            out, _ = trim_center(out, low_quality)
+            save_wave(tensor2numpy(out[0, ...]), fname=os.path.join(self.val_result_save_dir_step,"%s_restored.wav" % (batch_idx)), sample_rate=44100)
+        return {"loss": val_loss}

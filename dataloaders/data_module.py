@@ -19,6 +19,12 @@ class LowpassTrainCollator(object):
         keys = list(batch[0].keys())  # vocals
         ret = {}
         cutoffs, orders, filters, snr = [], [], [], []
+
+        if(self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][0] == self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][1]):
+            for key in keys:
+                ret[key+"_LR"] = ret[key].clone()
+            return ret
+
         for id, _ in enumerate(batch):
             cutoffs.append(int(uniform_torch(lower=int(self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][0] // 2),
                                              upper=int(self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][1] // 2))))
