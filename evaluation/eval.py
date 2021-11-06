@@ -5,6 +5,8 @@ sys.path.append("/opt/tiger/lhh_arnold_base/arnold_workspace/src")
 
 import concurrent.futures
 from multiprocessing import set_start_method
+import evaluation
+from evaluation.utils import *
 from evaluation import Config
 from progressbar import *
 import time
@@ -16,7 +18,7 @@ import random
 from tools.file.io import *
 from pynvml import nvmlInit
 import glob
-from evaluation.util import *
+
 
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 

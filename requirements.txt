@@ -3,7 +3,6 @@ coloredlogs
 numpy
 SoundFile
 scipy
-asteroid>=0.5.0
 voicefixer
 scikit-image
 

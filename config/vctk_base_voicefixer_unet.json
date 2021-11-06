@@ -1,9 +1,7 @@
 {
-  "name": "vctk_vf_unet",
   "task": {
     "inspect_training_data": false,
     "gsr": {
-      "perform": true,
       "gsr_model": {
         "unet": false,
         "voicefixer": {
@@ -15,7 +13,6 @@
     }
     },
     "ssr":{
-      "perform": false,
       "ssr_task": {
         "dereverberation": false,
         "denoising": false,
@@ -36,7 +33,7 @@
     "resume_from_checkpoint": "",
     "check_val_every_n_epoch": 2,
     "seed": 1234,
-    "num_works": 0,
+    "num_works": 32,
     "max_epoches": 5000,
     "hours_of_data_for_an_epoch": 500,
     "learning_rate": 0.0005,
@@ -44,8 +41,8 @@
     "input_segment_length": 3.0,
     "betas": [0.8, 0.99],
     "eps": 1e-9,
-    "batch_size": 4,
-    "warmup_steps": 1000,
+    "batch_size": 20,
+    "warmup_steps": 100,
     "reduce_lr_every_n_steps":40000,
     "save_top_k": -1
   },

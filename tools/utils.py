@@ -32,6 +32,7 @@ def get_hparams(init=True):
 
     hparams = HParams(**config)
     hparams.model_dir = model_dir
+    hparams["config_path"]=config_path
     return hparams, parser
 
 

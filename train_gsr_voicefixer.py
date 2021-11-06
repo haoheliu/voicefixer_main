@@ -46,7 +46,7 @@ parser = pl.Trainer.add_argparse_args(parser)
 args = parser.parse_args()
 
 nvmlInit()
-gpu_nums = 1 #int(nvmlDeviceGetCount())
+gpu_nums = int(nvmlDeviceGetCount())
 accelerator = 'ddp'
 distributed = True if (gpu_nums > 1) else False
 
@@ -64,7 +64,7 @@ callbacks.extend([
                       save_top_k=hp["train"]["save_top_k"],
                       mode='min',
                   ),
-                  initLogDir(current_dir=os.getcwd()),
+                  initLogDir(hp, current_dir=os.getcwd()),
                   TQDMProgressBar(refresh_rate=hp["log"]["progress_bar_refresh_rate"])
                   ]
                  )

@@ -26,7 +26,8 @@ class initLogDir(Callback):
             val_step = 0
             val_save_interval = int
     """
-    def __init__(self, current_dir):
+    def __init__(self, hp, current_dir):
+        self.hp = hp
         self.current_dir = current_dir
         os.system("rm temp_path.json") # To avoid the previous .json file to affect this experiment
 
@@ -34,8 +35,8 @@ class initLogDir(Callback):
         return pl_module.logger.experiment.log_dir
 
     def code_backup(self, pl_module: pl.LightningModule):
-        dir_save_code = os.path.join(pl_module.log_dir,"code")
-        os.makedirs(dir_save_code,exist_ok=True)
+        # dir_save_code = os.path.join(pl_module.log_dir,"code")
+        # os.makedirs(dir_save_code,exist_ok=True)
         # for file in glob.glob(os.path.join("*.sh")) + glob.glob(os.path.join("*.py")) + glob.glob(os.path.join("../*.py")) + glob.glob(os.path.join("../../*.py")):
         #     cmd = "cp "+file+" "+ dir_save_code
         #     lg.info("Backing up file: "+cmd)
@@ -60,6 +61,7 @@ class initLogDir(Callback):
             pl_module.log_dir = self.get_log_dir(pl_module=pl_module)
             print("LOG DIR: ", pl_module.log_dir)
             write_json({"path": pl_module.log_dir}, fname="temp_path.json")
+            os.system("cp %s %s" % (self.hp["config_path"], pl_module.log_dir))
             self.code_backup(pl_module = pl_module)
         else:
             while (not os.path.exists("temp_path.json")):

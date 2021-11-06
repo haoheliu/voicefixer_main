@@ -76,7 +76,8 @@ class UNetResComplex_100Mb(nn.Module):
         pad_len = int(np.ceil(x.shape[2] / self.downsample_ratio)) * self.downsample_ratio - origin_len
         x = F.pad(x, pad=(0, 0, 0, pad_len))
         x = x[..., 0: x.shape[-1] - 1]  # (bs, channels, T, F)
-
+        # import ipdb;
+        # ipdb.set_trace()
         # UNet
         (x1_pool, x1) = self.encoder_block1(x)  # x1_pool: (bs, 32, T / 2, F / 2)
         (x2_pool, x2) = self.encoder_block2(x1_pool)  # x2_pool: (bs, 64, T / 4, F / 4)

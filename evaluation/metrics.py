@@ -1,10 +1,17 @@
+
+import git
+import sys
+
+git_root = git.Repo("", search_parent_directories=True).git.rev_parse("--show-toplevel")
+sys.path.append(git_root)
+
 import librosa
 import torch
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 import speechmetrics as sm
 from tools.pytorch.mel_scale import MelScale
-from evaluation.util import *
+from evaluation import *
 
 EPS = 1e-8
 
@@ -18,7 +25,7 @@ class ImageMetrics():
 class AudioMetrics():
     def __init__(self, rate):
         self.rate = rate
-        self.metrics = sm.load(['sisdr','stoi','pesq'], np.inf)
+        self.metrics = sm.load(['sisdr','stoi','pesq','bsseval'], np.inf)
         self.mel_44k = MelScale(n_mels=128, sample_rate=44100, n_stft=1025)
         self.mel_16k = MelScale(n_mels=80, sample_rate=16000, n_stft=372)
 
@@ -99,10 +106,17 @@ class AudioMetrics():
         return torch.tensor(res)[...,None,None]
 
 if __name__ == '__main__':
+    import numpy as np
     au = AudioMetrics(rate=44100)
-    res = au.evaluation(est="/Users/admin/Downloads/test_sample_result_test_0_orig.wav",
-        target="/Users/admin/Downloads/test_sample_result_test_0_orig.wav")
-    print(res)
+    a = np.random.randn(44100*10)
+    print(au.metrics(a,a+1e-9,rate=44100))
+
+
+    # res = au.evaluation(est="/Users/admin/Downloads/test_sample_result_test_0_orig.wav",
+    #     target="/Users/admin/Downloads/test_sample_result_test_0_orig.wav")
+    # print(res)
+
+
     # a = torch.abs(torch.randn((1,1,100,128)))
     # b = torch.abs(torch.randn((1,1,100,128)))
     # print(au.lsd(a,b))

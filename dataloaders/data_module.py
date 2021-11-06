@@ -20,11 +20,11 @@ class LowpassTrainCollator(object):
         ret = {}
         cutoffs, orders, filters, snr = [], [], [], []
         for id, _ in enumerate(batch):
-            cutoffs.append(int(uniform_torch(lower=int(self.hp["augment"]["low_pass_2"]["low_pass_range"][0] // 2),
-                                             upper=int(self.hp["augment"]["low_pass_2"]["low_pass_range"][1] // 2))))
-            orders.append(int(uniform_torch(lower=self.hp["augment"]["low_pass_2"]["filter_order_range"][0],
-                                            upper=self.hp["augment"]["low_pass_2"]["filter_order_range"][1])))
-            filters.append(random_choose_list(self.hp["augment"]["low_pass_2"]["filter_type"]))
+            cutoffs.append(int(uniform_torch(lower=int(self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][0] // 2),
+                                             upper=int(self.hp["augment"]["params"]["low_pass_2"]["low_pass_range"][1] // 2))))
+            orders.append(int(uniform_torch(lower=self.hp["augment"]["params"]["low_pass_2"]["filter_order_range"][0],
+                                            upper=self.hp["augment"]["params"]["low_pass_2"]["filter_order_range"][1])))
+            filters.append(random_choose_list(self.hp["augment"]["params"]["low_pass_2"]["filter_type"]))
 
         for key in keys:
             if ("fname" in key):
@@ -75,6 +75,7 @@ class SrRandSampleRate(pl.LightningDataModule):
 
         super(SrRandSampleRate, self).__init__()
         self.hp = hp
+        self.collate_fn = LowpassTrainCollator(hp)
         self.distributed = distributed
         self.train_loader = "FixLengthAugRandomDataLoader"
         datasets = []
@@ -103,9 +104,9 @@ class SrRandSampleRate(pl.LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         if(self.distributed):
             sampler = DistributedSampler(self.train)
-            return DataLoader(self.train, sampler = sampler, batch_size=self.hp["train"]["batch_size"], num_workers=self.hp["train"]["num_works"], pin_memory=True, collate_fn=collate_fn)
+            return DataLoader(self.train, sampler = sampler, batch_size=self.hp["train"]["batch_size"], num_workers=self.hp["train"]["num_works"], pin_memory=True, collate_fn=self.collate_fn)
         else:
-            return DataLoader(self.train, batch_size=self.hp["train"]["batch_size"], shuffle=True, num_workers=self.hp["train"]["num_works"],collate_fn=collate_fn)
+            return DataLoader(self.train, batch_size=self.hp["train"]["batch_size"], shuffle=True, num_workers=self.hp["train"]["num_works"],collate_fn=self.collate_fn)
 
     def val_dataloader(self):
         if(self.distributed):

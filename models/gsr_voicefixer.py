@@ -42,15 +42,15 @@ class BN_GRU(torch.nn.Module):
         return out.unsqueeze(1)
 
 class Generator(nn.Module):
-    def __init__(self,hp,channels):
+    def __init__(self,hp):
         super(Generator, self).__init__()
         self.hp = hp
         if(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["unet"]):
             from models.components.unet import UNetResComplex_100Mb
-            self.analysis_module = UNetResComplex_100Mb(channels=channels)
+            self.analysis_module = UNetResComplex_100Mb(channels=hp["model"]["channels_in"])
         elif(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["unet_small"]):
             from models.components.unet_small import UNetResComplex_100Mb
-            self.analysis_module = UNetResComplex_100Mb(channels=channels)
+            self.analysis_module = UNetResComplex_100Mb(channels=hp["model"]["channels_in"])
         elif(self.hp["task"]["gsr"]["gsr_model"]["voicefixer"]["bi_gru"]):
             n_mel = hp["model"]["mel_freq_bins"]
             self.analysis_module = nn.Sequential(
@@ -134,7 +134,7 @@ class VoiceFixer(pl.LightningModule):
                             n_stft=hp["model"]["window_size"] // 2 + 1)
 
         # masking
-        self.generator = Generator(hp, self.mel_freq_bins)
+        self.generator = Generator(hp)
 
         self.lr_lambda = lambda step: self.get_lr_lambda(step,
                                                          gamma = self.gamma,
@@ -213,10 +213,10 @@ class VoiceFixer(pl.LightningModule):
             snr, scale = [],[]
             for i in range(vocal.size()[0]):
                 vocal[i,...], LR[i,...], augLR[i,...], noise[i,...], _snr, _scale = add_noise_and_scale_with_HQ_with_Aug(vocal[i,...],LR[i,...], augLR[i,...], noise[i,...],
-                                                                                                                         snr_l=self.hp["augment"]["noise"]["snr_range"][0],
-                                                                                                                         snr_h=self.hp["augment"]["noise"]["snr_range"][1],
-                                                                                                                         scale_lower=self.hp["augment"]["scale"]["scale_range"][0],
-                                                                                                                         scale_upper=self.hp["augment"]["scale"]["scale_range"][1])
+                                                                                                                         snr_l=self.hp["augment"]["params"]["noise"]["snr_range"][0],
+                                                                                                                         snr_h=self.hp["augment"]["params"]["noise"]["snr_range"][1],
+                                                                                                                         scale_lower=self.hp["augment"]["params"]["scale"]["scale_range"][0],
+                                                                                                                         scale_upper=self.hp["augment"]["params"]["scale"]["scale_range"][1])
                 snr.append(_snr), scale.append(_scale)
             return vocal, augLR, LR,  noise + augLR
         else:
@@ -234,7 +234,7 @@ class VoiceFixer(pl.LightningModule):
                 return vocals, LR, LR_noisy, batch['fname'][0]
 
 
-    def training_step(self, batch, batch_nb, optimizer_idx):
+    def training_step(self, batch, batch_nb):
 
         self.vocal, _, _, self.low_quality = self.preprocess(batch, train=True)
 
@@ -259,6 +259,6 @@ class VoiceFixer(pl.LightningModule):
         self.train_step += 1.0
         return {"loss": loss}
 
-
-    def validation_step(self):
-        pass
+    #
+    # def validation_step(self):
+    #     pass
