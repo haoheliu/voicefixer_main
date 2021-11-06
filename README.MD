@@ -4,7 +4,14 @@
 
 VoiceFixer is a framework for general speech restoration. We aim at the restoration of severely degraded speech and historical speech.
 
-
+- [VoiceFixer](#voicefixer)
+  * [Materials](#materials)
+  * [Usage](#usage)
+    + [Environment (Do this at first)](#environment--do-this-at-first-)
+    + [VoiceFixer for general speech restoration](#voicefixer-for-general-speech-restoration)
+    + [ResUNet for general speech restoration](#resunet-for-general-speech-restoration)
+    + [ResUNet for single task speech restoration](#resunet-for-single-task-speech-restoration)
+  * [Citation](#citation)
   
 ## Materials
 
@@ -23,7 +30,7 @@ cd voicefixer_main
 source init.sh 
 ```
 
-### VoiceFixer (general speech restoration)
+### VoiceFixer for general speech restoration
 **Here we take *VF_UNet*(voicefixer with unet as analysis module) as an example.**
 
 - Training
@@ -72,7 +79,7 @@ python3 eval_gsr_voicefixer.py  \
 
 Evaluation results will be presented in the *exp_results* folder.
 
-### Unet (general speech restoration)
+### ResUNet for general speech restoration
 
 - Training 
 ```shell
@@ -91,7 +98,7 @@ You can checkout the *logs* directory for checkpoints, logging and validation re
                         --description  <describe-this-test>
     ```
 
-### Unet (single task speech restoration)
+### ResUNet for single task speech restoration
 
 - Training 
   - Denoising
