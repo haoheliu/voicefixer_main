@@ -16,12 +16,15 @@ class PairedFullLengthDataLoader(Dataset):
         self.data_all = {}
         self.length = None
         self.test_set = dataset_name
+
         for k in data.keys():
             if(self.test_set not in data[k].keys()):
                 continue
             self.data_all[k],_,_ = construct_data_folder(data[k])
             if(self.length is None):
                 self.length = len(self.data_all[k][dataset_name])
+        # import ipdb;
+        # ipdb.set_trace()
         self.pairs = self.get_paired_fnames()
     '''
         {

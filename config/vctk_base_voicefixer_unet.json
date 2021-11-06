@@ -1,0 +1,145 @@
+{
+  "task": {
+    "inspect_training_data": false,
+    "gsr": {
+      "gsr_model": {
+        "unet": false,
+        "voicefixer": {
+          "unet": true,
+          "unet_small": false,
+          "bi_gru": false,
+          "dnn": false
+      }
+    }
+    },
+    "ssr":{
+      "ssr_task": {
+        "dereverberation": false,
+        "denoising": false,
+        "declipping": false,
+        "super_resolution": false
+      },
+      "ssr_model": {
+        "unet": false
+      }
+    }
+  },
+  "log": {
+    "log_every_n_steps": 10,
+    "flush_logs_every_n_steps":200,
+    "progress_bar_refresh_rate": 1
+  },
+  "train": {
+    "resume_from_checkpoint": "",
+    "check_val_every_n_epoch": 2,
+    "seed": 1234,
+    "num_works": 38,
+    "max_epoches": 5000,
+    "hours_of_data_for_an_epoch": 300,
+    "learning_rate": 0.0005,
+    "lr_decay": 0.90,
+    "input_segment_length": 3.0,
+    "betas": [0.5, 0.999],
+    "eps": 1e-9,
+    "batch_size": 24,
+    "warmup_steps": 100,
+    "reduce_lr_every_n_steps":40000,
+    "save_top_k": -1
+  },
+  "data": {
+    "source_types": ["vocals","noise"],
+    "train_dataset":{
+        "vocals":{
+            "vctk": "dataIndex/vctk/train/speech.lst"
+        },
+        "noise": {
+            "vd_noise": "dataIndex/vd_noise/vd_noise.lst"
+        }
+    },
+    "val_dataset":{
+        "vocals": {
+            "gsr": "datasets/se/TestSets/ALL_GSR/target.lst"
+        },
+        "noisy": {
+            "gsr": "datasets/se/TestSets/ALL_GSR/simulated.lst"
+        }
+    },
+    "max_wav_value": 1.0,
+    "sampling_rate": 44100
+  },
+  "model": {
+    "mel_freq_bins": 128,
+    "window_size": 2048,
+    "hop_size": 441,
+    "n_mel": 128,
+    "pad_mode": "reflect", 
+    "window":"hann",
+    "channels_in": 1
+  },
+  "augment": {
+    "source": "vocals",
+    "effects": ["low_pass", "clip", "reverb_rir"],
+    "params": {
+        "rir_root": "datasets/se/RIR_44k/train",
+        "scale": {
+          "prob": [1,0],
+          "scale_range": [0.3, 1.0]
+        },
+        "noise": {
+          "prob": [1.0],
+          "snr_range": [-5,40]
+        },
+        "fade": {
+            "prob": [0.1],
+            "fade_in_portion": [0.1, 0.3],
+            "fade_out_portion": [0.1, 0.3]
+        },
+        "pitch": {
+            "prob": [0.0, 0.0],
+            "pitch_up_range": [100, 350],
+            "pitch_down_range": [-350, -100]
+        },
+        "treble": {
+            "prob": [0.05],
+            "level": [3, 20]
+        },
+        "bass": {
+            "prob": [0.15],
+            "level": [3, 35]
+        },
+        "reverb_freeverb": {
+            "prob": [0.20],
+            "reverb_level": [0, 50],
+            "dumping_factor": [0, 100],
+            "room_size": [0, 100]
+        },
+        "reverb_rir": {
+            "prob": [0.30],
+            "rir_file_name": ""
+        },
+        "low_pass_1": {
+            "prob": [0.25],
+            "low_pass_range": [4000, 22000]
+        },
+       "low_pass_2": {
+            "prob": [1.0],
+            "low_pass_range": [1500, 44100],
+            "filter_order_range": [2,10],
+            "filter_type": ["cheby1", "ellip", "bessel", "stft_hard", "stft", "butter"]
+        },
+        "high_pass": {
+            "prob": [0.25],
+            "high_pass_range": [500, 2000]
+        },
+        "clip": {
+            "prob": [0.20],
+            "louder_time": [1.0, 11.0]
+        },
+        "time_dropout": {
+            "prob": [0.0],
+            "max_segment": 0.1,
+            "drop_range": [0.0, 1.0]
+        }
+    }
+  }
+}
