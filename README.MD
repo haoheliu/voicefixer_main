@@ -1,6 +1,6 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2109.13731-brightgreen.svg?style=flat-square)](https://arxiv.org/abs/2109.13731) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1HYYUepIsl2aXsdET6P_AmNVXuWP1MCMf?usp=sharing) [![PyPI version](https://badge.fury.io/py/voicefixer.svg)](https://badge.fury.io/py/voicefixer) [![githubio](https://img.shields.io/badge/GitHub.io-Audio_Samples-blue?logo=Github&style=flat-square)](https://haoheliu.github.io/demopage-voicefixer)
 
-**2021-11-06: I have just updated the code structure to make it easier to understand. It may have potential bug now. I will do some test training later (before 11/15/2021).**
+**2021-11-06: I have just updated the code structure to make it easier to understand. It may have potential bug now. I will do some test training later.**
 
 ~~**2021-11-01: I will update the code and make it easier to use later.**~~
 
