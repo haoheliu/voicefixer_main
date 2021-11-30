@@ -9,7 +9,7 @@ r = os.path.dirname(git_root)
 from tools.file.wav import *
 
 from tools.file.path import find_and_build
-from evaluation_proc import Config
+from evaluation_proc.config import Config
 from progressbar import *
 
 ROOT = os.path.join(r,"voicefixer_main/datasets/se/TestSets")
