@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 import math
+from film import Film 
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, activation, momentum):
@@ -164,6 +165,109 @@ class DecoderBlockRes1B(nn.Module):
         x = self.conv_block5(x)
         return x
 
+
+class EncoderBlockRes2BCond(nn.Module):
+    def __init__(self, in_channels, out_channels, downsample, activation, momentum, cond_embedding_dim):
+        super(EncoderBlockRes2BCond, self).__init__()
+        size = (3,3)
+
+        self.conv_block1 = ConvBlockResCond(in_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block2 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.downsample = downsample
+
+    def forward(self, x, cond_vec):
+        encoder = self.conv_block1(x, cond_vec)
+        # import ipdb; ipdb.set_trace()
+        encoder = self.conv_block2(encoder, cond_vec)
+        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
+        return encoder_pool, encoder
+
+class DecoderBlockRes2BCond(nn.Module):
+    def __init__(self, in_channels, out_channels, stride, activation, momentum, cond_embedding_dim):
+        super(DecoderBlockRes2BCond, self).__init__()
+        size = (3,3)
+        self.activation = activation
+
+        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
+            out_channels=out_channels, kernel_size=size, stride=stride,
+            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=1)
+
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.conv_block2 = ConvBlockResCond(out_channels * 2, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block3 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+    def init_weights(self):
+        init_layer(self.conv1)
+
+    def prune(self, x, both=False):
+        """Prune the shape of x after transpose convolution.
+        """
+        if(both): x = x[:, :, 0 : - 1, 0:-1]
+        else: x = x[:, :, 0: - 1, :]
+        return x
+
+    def forward(self, input_tensor, concat_tensor, cond_vec, both=False):
+        x = self.conv1(F.relu_(self.bn1(input_tensor)))
+        x = self.prune(x,both=both)
+        x = torch.cat((x, concat_tensor), dim=1)
+        x = self.conv_block2(x, cond_vec)
+        x = self.conv_block3(x, cond_vec)
+        return x
+
+class EncoderBlockRes4BCond(nn.Module):
+    def __init__(self, in_channels, out_channels, downsample, activation, momentum, cond_embedding_dim):
+        super(EncoderBlockRes4B, self).__init__()
+        size = (3,3)
+
+        self.conv_block1 = ConvBlockResCond(in_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block2 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block3 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block4 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.downsample = downsample
+
+    def forward(self, x, cond_vec):
+        encoder = self.conv_block1(x, cond_vec)
+        encoder = self.conv_block2(encoder, cond_vec)
+        encoder = self.conv_block3(encoder, cond_vec)
+        encoder = self.conv_block4(encoder, cond_vec)
+        encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
+        return encoder_pool, encoder
+
+class DecoderBlockRes4BCond(nn.Module):
+    def __init__(self, in_channels, out_channels, stride, activation, momentum, cond_embedding_dim):
+        super(DecoderBlockRes4B, self).__init__()
+        size = (3,3)
+        self.activation = activation
+
+        self.conv1 = torch.nn.ConvTranspose2d(in_channels=in_channels,
+            out_channels=out_channels, kernel_size=size, stride=stride,
+            padding=(0, 0), output_padding=(0, 0), bias=False, dilation=1)
+
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.conv_block2 = ConvBlockResCond(out_channels * 2, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block3 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block4 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+        self.conv_block5 = ConvBlockResCond(out_channels, out_channels, size, activation, momentum, cond_embedding_dim)
+
+    def init_weights(self):
+        init_layer(self.conv1)
+
+    def prune(self, x, both=False):
+        """Prune the shape of x after transpose convolution.
+        """
+        if(both): x = x[:, :, 0 : - 1, 0:-1]
+        else: x = x[:, :, 0: - 1, :]
+        return x
+
+    def forward(self, input_tensor, concat_tensor, cond_vec, both=False):
+        x = self.conv1(F.relu_(self.bn1(input_tensor)))
+        x = self.prune(x,both=both)
+        x = torch.cat((x, concat_tensor), dim=1)
+        x = self.conv_block2(x, cond_vec)
+        x = self.conv_block3(x, cond_vec)
+        x = self.conv_block4(x, cond_vec)
+        x = self.conv_block5(x, cond_vec)
+        return x
+
 class EncoderBlockRes4B(nn.Module):
     def __init__(self, in_channels, out_channels, downsample, activation, momentum):
         super(EncoderBlockRes4B, self).__init__()
@@ -219,6 +323,60 @@ class DecoderBlockRes4B(nn.Module):
         x = self.conv_block5(x)
         return x
 
+class ConvBlockResCond(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, activation, momentum, cond_embedding_dim):
+        r"""Residual block.
+        """
+        super(ConvBlockResCond, self).__init__()
+
+        self.activation = activation
+        padding = [kernel_size[0] // 2, kernel_size[1] // 2]
+
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+        self.conv1 = nn.Conv2d(in_channels=in_channels,
+                              out_channels=out_channels,
+                              kernel_size=kernel_size, stride=(1, 1),
+                              dilation=(1, 1), padding=padding, bias=False)
+        self.film1 = Film(channels=out_channels,cond_embedding_dim=cond_embedding_dim)
+        self.conv2 = nn.Conv2d(in_channels=out_channels,
+                              out_channels=out_channels,
+                              kernel_size=kernel_size, stride=(1, 1),
+                              dilation=(1, 1), padding=padding, bias=False)
+        self.film2 = Film(channels=out_channels,cond_embedding_dim=cond_embedding_dim)
+
+        if in_channels != out_channels:
+            self.shortcut = nn.Conv2d(in_channels=in_channels,
+                out_channels=out_channels, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
+            self.film_res = Film(channels=out_channels,cond_embedding_dim=cond_embedding_dim)
+            self.is_shortcut = True
+        else:
+            self.is_shortcut = False
+
+        self.init_weights()
+
+    def init_weights(self):
+        init_bn(self.bn1)
+        init_bn(self.bn2)
+        init_layer(self.conv1)
+        init_layer(self.conv2)
+
+        if self.is_shortcut:
+            init_layer(self.shortcut)
+
+    def forward(self, x, cond_vec):
+        origin = x
+        x = self.conv1(F.leaky_relu_(self.bn1(x), negative_slope=0.01))
+        x = self.film1(x, cond_vec)
+        x = self.conv2(F.leaky_relu_(self.bn2(x), negative_slope=0.01))
+        x = self.film2(x, cond_vec)
+        if self.is_shortcut:
+            residual = self.shortcut(origin)
+            residual = self.film_res(residual, cond_vec)
+            return residual + x
+        else:
+            return origin + x
 
 class ConvBlockRes(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, activation, momentum):
