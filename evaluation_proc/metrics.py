@@ -13,7 +13,7 @@ import speechmetrics as sm
 from tools.pytorch.mel_scale import MelScale
 from evaluation_proc.utils import *
 
-EPS = 1e-8
+EPS = 1e-12
 
 class ImageMetrics():
     def __init__(self):
@@ -82,7 +82,7 @@ class AudioMetrics():
 
     def lsd(self,est, target):
         # in non-log scale
-        lsd = torch.log10((target**2/(est**2 + EPS)) + EPS)**2
+        lsd = torch.log10((target**2/((est + EPS)**2)) + EPS)**2
         lsd = torch.mean(torch.mean(lsd,dim=3)**0.5,dim=2)
         return lsd[...,None,None]
 
