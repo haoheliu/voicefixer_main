@@ -8,6 +8,9 @@ def construct_data_folder(additional_data: dict, audio=True):
     folder = {}
     for each in additional_data.keys():
         if (each not in folder.keys()): folder[each] = []
+        if(not os.path.exists(additional_data[each])): 
+            print("Warning: %s not found, skip" % additional_data)
+            continue
         folder[each] += read_list(additional_data[each])
     if (audio):
         keys, weights = construct_average_durations(folder)
