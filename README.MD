@@ -9,13 +9,13 @@
 VoiceFixer is a framework for general speech restoration. We aim at the restoration of severely degraded speech and historical speech.
 
 - [VoiceFixer](#voicefixer)
-  * [Materials](#materials)
-  * [Usage](#usage)
-    + [Environment (Do this at first)](#environment--do-this-at-first-)
-    + [VoiceFixer for general speech restoration](#voicefixer-for-general-speech-restoration)
-    + [ResUNet for general speech restoration](#resunet-for-general-speech-restoration)
-    + [ResUNet for single task speech restoration](#resunet-for-single-task-speech-restoration)
-  * [Citation](#citation)
+  - [Materials](#materials)
+  - [Usage](#usage)
+    - [Environment (Do this at first)](#environment-do-this-at-first)
+    - [VoiceFixer for general speech restoration](#voicefixer-for-general-speech-restoration)
+    - [ResUNet for general speech restoration](#resunet-for-general-speech-restoration)
+    - [ResUNet for single task speech restoration](#resunet-for-single-task-speech-restoration)
+  - [Citation](#citation)
   
 ## Materials
 
