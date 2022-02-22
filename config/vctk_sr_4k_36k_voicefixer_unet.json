@@ -25,9 +25,9 @@
     }
   },
   "log": {
-    "log_every_n_steps": 10,
+    "log_every_n_steps": 20,
     "flush_logs_every_n_steps":200,
-    "progress_bar_refresh_rate": 1
+    "progress_bar_refresh_rate": 2
   },
   "train": {
     "resume_from_checkpoint": "",
@@ -82,15 +82,15 @@
     "params": {
         "rir_root": "datasets/se/RIR_44k/train",
         "scale": {
-          "prob": [1,0],
-          "scale_range": [0.3, 1.0]
+          "prob": [1.0],
+          "scale_range": [0.4, 1.0]
         },
         "noise": {
-          "prob": [1.0],
+          "prob": [0.0],
           "snr_range": [-5,40]
         },
         "fade": {
-            "prob": [0.1],
+            "prob": [0.0],
             "fade_in_portion": [0.1, 0.3],
             "fade_out_portion": [0.1, 0.3]
         },
@@ -100,39 +100,39 @@
             "pitch_down_range": [-350, -100]
         },
         "treble": {
-            "prob": [0.05],
+            "prob": [0.0],
             "level": [3, 20]
         },
         "bass": {
-            "prob": [0.15],
+            "prob": [0.0],
             "level": [3, 35]
         },
         "reverb_freeverb": {
-            "prob": [0.20],
+            "prob": [0.0],
             "reverb_level": [0, 50],
             "dumping_factor": [0, 100],
             "room_size": [0, 100]
         },
         "reverb_rir": {
-            "prob": [0.30],
+            "prob": [0.0],
             "rir_file_name": ""
         },
         "low_pass_1": {
-            "prob": [0.25],
+            "prob": [0.0],
             "low_pass_range": [4000, 22000]
         },
        "low_pass_2": {
             "prob": [1.0],
             "low_pass_range": [1500, 44100],
             "filter_order_range": [2,10],
-            "filter_type": ["cheby1", "ellip", "bessel", "stft_hard", "stft", "butter"]
+            "filter_type": ["butter"]
         },
         "high_pass": {
-            "prob": [0.25],
+            "prob": [0.0],
             "high_pass_range": [500, 2000]
         },
         "clip": {
-            "prob": [0.20],
+            "prob": [0.0],
             "louder_time": [1.0, 11.0]
         },
         "time_dropout": {
