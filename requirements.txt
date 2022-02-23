@@ -11,6 +11,7 @@ torchlibrosa==0.0.7
 matplotlib
 setuptools
 setuptools-scm
+tensorboard==2.6.0
 tensorboardX
 pillow
 julius
