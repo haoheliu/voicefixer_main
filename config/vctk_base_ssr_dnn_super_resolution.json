@@ -20,7 +20,7 @@
         "super_resolution": false
       },
       "ssr_model": {
-        "unet": true
+        "unet": false
       }
     }
   },
