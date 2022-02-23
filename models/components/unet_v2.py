@@ -131,7 +131,7 @@ class UNetResComplex_100Mb(nn.Module):
 
         mask_mag = x[:,0:1, :, :]
 
-        out_mag = mask_mag
+        out_mag = torch.relu(mask_mag) + sp
 
         out_real = out_mag * cos_in
         out_imag = out_mag * sin_in

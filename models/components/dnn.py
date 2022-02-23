@@ -51,9 +51,6 @@ class DNN(nn.Module):
             nn.Linear(n_mel * 2, n_mel * 4),
             nn.ReLU(),
             nn.BatchNorm2d(1),
-            nn.Linear(n_mel * 4, n_mel * 8),
-            nn.ReLU(),
-            nn.BatchNorm2d(1),
             nn.Linear(n_mel * 8, n_mel * 4),
             nn.ReLU(),
             nn.BatchNorm2d(1),
@@ -64,7 +61,7 @@ class DNN(nn.Module):
 
         # self.conv = nn.Conv1d(in_channels=channels,out_channels=1,kernel_size=1)
 
-        self.init_weights()
+        # self.init_weights()
 
     def init_weights(self):
         init_layer(self.after_conv2)
@@ -83,6 +80,8 @@ class DNN(nn.Module):
         # shapes: (batch_size, channels_num, time_steps, freq_bins)
 
         out_mag = self.lstm(sp)
+        
+        out_mag = torch.relu(out_mag) + sp
 
         out_real = out_mag * cos_in
         out_imag = out_mag * sin_in
