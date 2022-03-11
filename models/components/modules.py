@@ -115,16 +115,10 @@ class EncoderBlockRes1B(nn.Module):
         size = (3,3)
 
         self.conv_block1 = ConvBlockRes(in_channels, out_channels, size, activation, momentum)
-        self.conv_block2 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
         self.downsample = downsample
 
     def forward(self, x):
         encoder = self.conv_block1(x)
-        encoder = self.conv_block2(encoder)
-        encoder = self.conv_block3(encoder)
-        encoder = self.conv_block4(encoder)
         encoder_pool = F.avg_pool2d(encoder, kernel_size=self.downsample)
         return encoder_pool, encoder
 
@@ -140,9 +134,6 @@ class DecoderBlockRes1B(nn.Module):
 
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv_block2 = ConvBlockRes(out_channels * 2, out_channels, size, activation, momentum)
-        self.conv_block3 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block4 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
-        self.conv_block5 = ConvBlockRes(out_channels, out_channels, size, activation, momentum)
 
     def init_weights(self):
         init_layer(self.conv1)
@@ -159,9 +150,6 @@ class DecoderBlockRes1B(nn.Module):
         x = self.prune(x,both=both)
         x = torch.cat((x, concat_tensor), dim=1)
         x = self.conv_block2(x)
-        x = self.conv_block3(x)
-        x = self.conv_block4(x)
-        x = self.conv_block5(x)
         return x
 
 class EncoderBlockRes4B(nn.Module):

@@ -5,8 +5,8 @@
       "gsr_model": {
         "unet": false,
         "voicefixer": {
-          "unet": true,
-          "unet_small": false,
+          "unet": false,
+          "unet_small": true,
           "bi_gru": false,
           "dnn": false
       }
@@ -34,7 +34,7 @@
     "check_val_every_n_epoch": 2,
     "seed": 1234,
     "num_works": 20,
-    "max_epoches": 100,
+    "max_epoches": 1000,
     "hours_of_data_for_an_epoch": 44,
     "learning_rate": 0.0004,
     "lr_decay": 0.85,
@@ -125,7 +125,7 @@
             "prob": [1.0],
             "low_pass_range": [1500, 44100],
             "filter_order_range": [2,10],
-            "filter_type": ["butter"]
+            "filter_type": ["cheby1"]
         },
         "high_pass": {
             "prob": [0.0],

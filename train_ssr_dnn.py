@@ -49,7 +49,7 @@ logger = TensorBoardLogger(os.path.dirname(hp.model_dir), name=os.path.basename(
 hp["log_dir"] = logger.log_dir
 
 model = SSR_DNN(hp, channels=1, type_target="vocals")
-# print(model)
+
 dm = SrRandSampleRate(hp, distributed)
 
 callbacks = []

@@ -49,6 +49,7 @@ logger = TensorBoardLogger(os.path.dirname(hp.model_dir), name=os.path.basename(
 hp["log_dir"] = logger.log_dir
 
 model = VoiceFixer(hp, channels=1, type_target="vocals")
+print(model)
 # print(model)
 dm = SrRandSampleRate(hp, distributed)
 
