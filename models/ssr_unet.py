@@ -229,6 +229,6 @@ class SSR_UNet(pl.LightningModule):
         sp_target, _ = self.pre(vocal)
         sp_low_quality, _ = self.pre(low_quality)
         estimation = self(sp_low_quality, low_quality)['wav']
-        val_loss = self.f_loss(estimation, low_quality)
+        val_loss = self.f_loss(estimation, sp_target)
         self.log("val_l", val_loss, on_step=False, on_epoch=True, logger=True, sync_dist=True, prog_bar=True, batch_size=1)
         return {"loss": val_loss}
